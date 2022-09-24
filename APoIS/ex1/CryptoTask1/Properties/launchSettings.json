@@ -1,8 +1,7 @@
 {
   "profiles": {
     "CryptoTask1": {
-      "commandName": "Project",
-      "commandLineArgs": "get -n 100"
+      "commandName": "Project"
     }
   }
 }
