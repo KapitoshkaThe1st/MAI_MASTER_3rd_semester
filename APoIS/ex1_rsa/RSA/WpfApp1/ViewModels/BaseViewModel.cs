@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace RSADemo
+namespace RSA_Demo
 {
     public abstract class BaseViewModel : INotifyPropertyChanged
     {

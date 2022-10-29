@@ -2,7 +2,7 @@
 
 namespace RSA.PrimalityTest
 {
-    interface IPrimalityTest
+    public interface IPrimalityTest
     {
         bool Test(BigInteger num);
     }

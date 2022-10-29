@@ -3,14 +3,14 @@ using System.Numerics;
 
 namespace RSA
 {
-    internal class RSAHelper
+    public abstract class RSAHelper
     {
         private BigInteger _n;
         private BigInteger _exponent;
 
-        public RSAHelper(BigInteger n, BigInteger publicExponent)
+        public RSAHelper(BigInteger modulus, BigInteger publicExponent)
         {
-            _n = n;
+            _n = modulus;
             _exponent = publicExponent;
         }
 
@@ -20,9 +20,9 @@ namespace RSA
         }
     }
 
-    class RSAEncoder : RSAHelper
+    public class RSAEncoder : RSAHelper
     {
-        public RSAEncoder(BigInteger n, BigInteger publicExponent) : base(n, publicExponent) { }
+        public RSAEncoder(BigInteger modulus, BigInteger publicExponent) : base(modulus, publicExponent) { }
 
         public BigInteger Encode(BigInteger m)
         {
@@ -30,10 +30,10 @@ namespace RSA
         }
     }
 
-    class RSADecoder : RSAHelper
+    public class RSADecoder : RSAHelper
     {
 
-        public RSADecoder(BigInteger n, BigInteger privateExponent) : base(n, privateExponent) { }
+        public RSADecoder(BigInteger modulus, BigInteger privateExponent) : base(modulus, privateExponent) { }
 
         public BigInteger Decode(BigInteger m)
         {

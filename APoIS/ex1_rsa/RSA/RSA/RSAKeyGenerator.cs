@@ -6,15 +6,7 @@ using RSA.PrimalityTest;
 
 namespace RSA
 {
-    public enum RSAKeyType
-    {
-        RSA512 = 256,
-        RSA1024 = 512,
-        RSA2048 = 1024,
-        Bit4096 = 2048
-    }
-    
-    class RSAKeyGenerator
+    public class RSAKeyGenerator
     {
         private IPrimalityTest _primalityTest;
         private readonly int _byteLength;
@@ -85,7 +77,7 @@ namespace RSA
             return number;
         }
 
-        public void Generate(out BigInteger n, out BigInteger publicExponent, out BigInteger privateExponent)
+        public void Generate(out BigInteger modulus, out BigInteger publicExponent, out BigInteger privateExponent)
         {
             BigInteger p = GeneratePrimeNumber(true);
             Console.WriteLine($"p: {p}");
@@ -95,7 +87,7 @@ namespace RSA
                 BigInteger q = GeneratePrimeNumber(false);
                 Console.WriteLine($"q: {q}");
 
-                n = p * q;
+                modulus = p * q;
 
                 //Console.WriteLine($"n: {n}");
 
@@ -109,7 +101,7 @@ namespace RSA
 
                 //Console.WriteLine($"phiN: {phiN}");
 
-                BigInteger treshold = BigIntegerExtensions.Sqrt(BigIntegerExtensions.Sqrt(n)) / 3 + 1;
+                BigInteger treshold = BigIntegerExtensions.Sqrt(BigIntegerExtensions.Sqrt(modulus)) / 3 + 1;
 
                 //Console.WriteLine($"treshold: {treshhold}");
 

@@ -1,13 +1,50 @@
-﻿<Window x:Class="RSADemo.MainWindow"
+﻿<Window x:Class="RSA_Demo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:RSADemo"
+        xmlns:local="clr-namespace:RSA_Demo"
         mc:Ignorable="d"
         Title="RSA demo" Height="450" Width="800" MinHeight="300" MinWidth="350">
-        <Grid>
-        <DockPanel>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="79*"/>
+            <ColumnDefinition Width="81*"/>
+        </Grid.ColumnDefinitions>
+        <TabControl Grid.ColumnSpan="2">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label>Key generation</Label>
+                    </StackPanel>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <local:KeyGenerationView/>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label>Encoding</Label>
+                    </StackPanel>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <local:EncodingView/>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label>Decoding</Label>
+                    </StackPanel>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <local:DecodingView/>
+                </TabItem.Content>
+            </TabItem>
+        </TabControl>
+
+        <!--<DockPanel>
             <Button DockPanel.Dock="Bottom" Margin="5" Padding="5" Content="Generate keys" Command="{Binding GenerateKeysCommand}"/>
             <Grid>
                 <Grid.RowDefinitions>
@@ -50,7 +87,7 @@
                     <TextBox x:Name="CipherTextBox"/>
                 </DockPanel>
             </Grid>
-        </DockPanel>
+        </DockPanel>-->
 
     </Grid>
 </Window>

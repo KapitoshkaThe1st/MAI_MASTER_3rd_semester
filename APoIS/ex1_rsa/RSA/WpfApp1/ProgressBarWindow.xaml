@@ -1,9 +1,9 @@
-﻿<Window x:Class="RSADemo.ProgressBarWindow"
+﻿<Window x:Class="RSA_Demo.ProgressBarWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:RSADemo" d:DataContext="{d:DesignInstance Type=local:ProgressBarWindowViewModel}"
+        xmlns:local="clr-namespace:RSA_Demo" d:DataContext="{d:DesignInstance Type=local:ProgressBarWindowViewModel}"
         mc:Ignorable="d"
         Title="ProgressBarWindow" Height="200" Width="500" ResizeMode="NoResize">
     <DockPanel Margin="5">

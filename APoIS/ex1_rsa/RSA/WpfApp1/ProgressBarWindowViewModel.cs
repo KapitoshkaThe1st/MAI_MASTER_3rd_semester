@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Windows.Input;
 
-namespace RSADemo
+namespace RSA_Demo
 {
     class ProgressBarWindowViewModel : BaseViewModel
     {
