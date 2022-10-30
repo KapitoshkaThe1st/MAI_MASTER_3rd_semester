@@ -109,5 +109,17 @@ namespace RSA
 
             return r1;
         }
+
+        public static bool ModularMultiplicativeInverse(BigInteger num, BigInteger modulus, out BigInteger result)
+        {
+            if (ExtendedGreatestCommonDivisor(num, modulus, out BigInteger a, out BigInteger b) == 1)
+            {
+                result = ((num * a) % modulus == BigInteger.One) ? a : b;
+                return true;
+            }
+
+            result = BigInteger.Zero;
+            return false;
+        }
     }
 }

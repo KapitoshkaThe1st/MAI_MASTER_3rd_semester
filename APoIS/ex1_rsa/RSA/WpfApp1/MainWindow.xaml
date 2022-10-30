@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RSA_Demo"
         mc:Ignorable="d"
-        Title="RSA demo" Height="450" Width="800" MinHeight="300" MinWidth="350">
+        Title="RSA demo" Height="550" Width="800" MinHeight="300" MinWidth="350">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="79*"/>
@@ -42,52 +42,16 @@
                     <local:DecodingView/>
                 </TabItem.Content>
             </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Label>Modulus factorization attack</Label>
+                    </StackPanel>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <local:ModulusFactorizationAttackView/>
+                </TabItem.Content>
+            </TabItem>
         </TabControl>
-
-        <!--<DockPanel>
-            <Button DockPanel.Dock="Bottom" Margin="5" Padding="5" Content="Generate keys" Command="{Binding GenerateKeysCommand}"/>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" MinHeight="100"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*" MinHeight="100"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" MinWidth="150"/>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" MinWidth="150"/>
-                </Grid.ColumnDefinitions>
-
-                <DockPanel Margin="5" Grid.Column="0" Grid.Row="0">
-                    <Label DockPanel.Dock="Top" Content="Public key"/>
-                    <Button DockPanel.Dock="Bottom" Margin="3" Padding="5" HorizontalAlignment="Center" VerticalAlignment="Center" Width="70" Content="Encode" Command="{Binding EncodeCommand}"/>
-                    <TextBox x:Name="PublicKeyTextBox"/>
-                </DockPanel>
-
-                <DockPanel Margin="5" Grid.Column="2" Grid.Row="0">
-                    <Label DockPanel.Dock="Top" Content="Private key"/>
-                    <Button DockPanel.Dock="Bottom" Margin="3" Padding="5" HorizontalAlignment="Center" VerticalAlignment="Center" Width="70" Content="Decode" Command="{Binding DecodeCommand}"/>
-                    <TextBox x:Name="PrivateKeyTextBox"/>
-                </DockPanel>
-
-                <GridSplitter Grid.Column="1" Width="3" Grid.RowSpan ="3" 
-                  VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext">
-                </GridSplitter>
-                <GridSplitter Grid.Row="1" Height="3" Grid.ColumnSpan ="3" 
-                   HorizontalAlignment="Stretch" ResizeBehavior="PreviousAndNext">
-                </GridSplitter>
-
-                <DockPanel Margin="5" Grid.Column="0" Grid.Row="2">
-                    <Label DockPanel.Dock="Top" Content="Text"/>
-                    <TextBox x:Name="TextTextBox"/>
-                </DockPanel>
-
-                <DockPanel Margin="5" Grid.Column="2" Grid.Row="2">
-                    <Label DockPanel.Dock="Top" Content="Cipher"/>
-                    <TextBox x:Name="CipherTextBox"/>
-                </DockPanel>
-            </Grid>
-        </DockPanel>-->
-
     </Grid>
 </Window>

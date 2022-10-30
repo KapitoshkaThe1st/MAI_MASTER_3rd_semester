@@ -76,6 +76,7 @@
                     </TextBox.Text>
                 </TextBox>
             </DockPanel>
+            
             <GridSplitter Grid.Column="1" Width="3" Grid.RowSpan ="3" 
                                 VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext">
             </GridSplitter>

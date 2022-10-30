@@ -12,7 +12,6 @@ namespace RSA
         private readonly int _byteLength;
         private readonly BigInteger _maxPQ;
 
-        //private static Random _rnd = new Random(0);
         private static Random _rnd = new Random();
 
         private static int PQRepresentationByteLength(RSAKeyType keyType)
@@ -62,8 +61,6 @@ namespace RSA
         {
             BigInteger number = GenInteger(larger);
 
-            //Console.WriteLine($"number: {number}");
-
             while (!_primalityTest.Test(number))
             {
                 number += 2;
@@ -71,53 +68,36 @@ namespace RSA
                 {
                     number = GenInteger(larger);
                 }
-                //Console.WriteLine($"number: {number}");
             }
 
             return number;
         }
 
+        public BigInteger P { get; private set; }
+        public BigInteger Q { get; private set; }
+
         public void Generate(out BigInteger modulus, out BigInteger publicExponent, out BigInteger privateExponent)
         {
-            BigInteger p = GeneratePrimeNumber(true);
-            Console.WriteLine($"p: {p}");
+            P = GeneratePrimeNumber(true);
 
             while (true)
             {
-                BigInteger q = GeneratePrimeNumber(false);
-                Console.WriteLine($"q: {q}");
+                Q = GeneratePrimeNumber(false);
 
-                modulus = p * q;
+                modulus = P * Q;
 
-                //Console.WriteLine($"n: {n}");
-
-                BigInteger phiQ = q - 1;
-                BigInteger phiP = p - 1;
-
-                //Console.WriteLine($"phiQ: {phiQ}");
-                //Console.WriteLine($"phiP: {phiP}");
+                BigInteger phiQ = Q - 1;
+                BigInteger phiP = P - 1;
 
                 BigInteger phiN = phiP * phiQ;
 
-                //Console.WriteLine($"phiN: {phiN}");
-
                 BigInteger treshold = BigIntegerExtensions.Sqrt(BigIntegerExtensions.Sqrt(modulus)) / 3 + 1;
 
-                //Console.WriteLine($"treshold: {treshhold}");
-
                 publicExponent = defaultPublicExponent;
-                //Console.WriteLine($"publicExponent: {publicExponent}");
 
-                if (MathUtils.ExtendedGreatestCommonDivisor(publicExponent, phiN, out BigInteger a, out BigInteger b) == 1)
+                if(MathUtils.ModularMultiplicativeInverse(publicExponent, phiN, out privateExponent) && privateExponent >= treshold)
                 {
-                    privateExponent = ((publicExponent * a) % phiN == BigInteger.One) ? a : b;
-
-                    //Console.WriteLine($"privateExponent: {privateExponent}");
-
-                    if (privateExponent >= treshold)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
         }

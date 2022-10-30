@@ -3,6 +3,7 @@ using RSA.PrimalityTest;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -57,6 +58,34 @@ namespace RSA_Demo
             }
         }
 
+        private BigInteger _p = BigInteger.Zero;
+        public BigInteger P
+        {
+            get => _p;
+            set
+            {
+                if (_p != value)
+                {
+                    _p = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private BigInteger _q = BigInteger.Zero;
+        public BigInteger Q
+        {
+            get => _q;
+            set
+            {
+                if (_q != value)
+                {
+                    _q = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         private const float _requiredPrimalityProbability = 0.995f;
 
         private Dictionary<(RSAKeyType keyType, PrimalityTestType testType), RSAKeyGenerator> _keyGenerators;
@@ -93,6 +122,10 @@ namespace RSA_Demo
                 Modulus = modulus;
                 PublicExponent = publicExponent;
                 PrivateExponent = privateExponent;
+
+                // дебильно, но по-другому сложно доставать P и Q
+                P = keyGenerator.P;
+                Q = keyGenerator.Q;
 
                 Application.Current.Dispatcher.Invoke(() => {
                     _progressBarManager.End();

@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <local:BigIntegerConverter x:Key="BigIntegerConverter"/>
         <local:EnumWithDescriptionToStringConverter x:Key="EnumWithDescriptionToStringConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <ObjectDataProvider x:Key="DataFromRSAKeyTypeEnum" MethodName="GetValues" ObjectType="{x:Type System:Enum}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="RSA:RSAKeyType"/>
@@ -24,22 +25,42 @@
     </UserControl.Resources>
     <DockPanel Margin="5">
         <Button DockPanel.Dock="Bottom" Width="200" HorizontalAlignment="Center" Content="Generate keys" Command="{Binding GenerateKeysCommand}"/>
-        <StackPanel DockPanel.Dock="Bottom" Margin="0 5 0 5" Orientation="Horizontal">
-            <Label Content="RSA key type"/>
-            <ComboBox Margin="0 5 5 5" Width="200" ItemsSource="{Binding Source={StaticResource DataFromRSAKeyTypeEnum}}"
+        <CheckBox x:Name="ShowPQCheckBox" DockPanel.Dock="Bottom" Content="Show P and Q" IsChecked="False"/>
+
+        <StackPanel DockPanel.Dock="Bottom" Margin="0 5 0 5" Orientation="Vertical">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <Label Content="RSA key type"/>
+                <ComboBox Margin="0 5 5 5" Width="200" ItemsSource="{Binding Source={StaticResource DataFromRSAKeyTypeEnum}}"
                 SelectedItem="{Binding Path=RSAKeyType}" />
-            <Label Content="Primality test"/>
-            <ComboBox Margin="0 5 5 5" Width="200" ItemsSource="{Binding Source={StaticResource DataFromPrimalityTestTypeEnum}}"
+                <Label Content="Primality test"/>
+                <ComboBox Margin="0 5 5 5" Width="200" ItemsSource="{Binding Source={StaticResource DataFromPrimalityTestTypeEnum}}"
                 SelectedItem="{Binding Path=PrimalityTestType}" >
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <ContentPresenter
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <ContentPresenter
                             Content="{Binding Converter={StaticResource EnumWithDescriptionToStringConverter}, ConverterParameter={x:Type local:PrimalityTestType}}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <Grid DockPanel.Dock="Bottom" 
+                        Visibility="{Binding ElementName=ShowPQCheckBox, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="20*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Label Grid.Row="0" Grid.Column="0" Content="P"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding P, Converter={StaticResource BigIntegerConverter}}" IsReadOnly="True"/>
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Q"/>
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Q, Converter={StaticResource BigIntegerConverter}}" IsReadOnly="True"/>
+            </Grid>
         </StackPanel>
-        
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="100"/>
