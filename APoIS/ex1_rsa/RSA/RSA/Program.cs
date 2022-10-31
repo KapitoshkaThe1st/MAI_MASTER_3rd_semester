@@ -52,23 +52,89 @@ namespace RSA
             Console.WriteLine($"failed fraction: {(float)failedCount / totalCount}");
         }
 
+        static bool IsPrime(BigInteger n, out BigInteger divisor)
+        {
+            if (n <= 1)
+            {
+                throw new ArgumentException();
+            }
+
+            if (n == 2 || n == 3)
+            {
+                divisor = BigInteger.Zero;
+                return true;
+            }
+
+            if (n <= 1)
+            {
+                throw new ArgumentException();
+            }
+
+            if (n % 2 == 0 || n % 3 == 0)
+            {
+                divisor = n;
+                return false;
+            }
+
+            for (BigInteger i = 5; i * i <= n; i += 6)
+            {
+                if (n % i == 0)
+                {
+                    divisor = i;
+                    return false;
+                }
+
+                if (n % (i + 2) == 0)
+                {
+                    divisor = i + 2;
+                    return false;
+                }
+            }
+
+            divisor = BigInteger.Zero;
+            return true;
+        }
+
+        static string PrimalityInformation(BigInteger bi)
+        {
+            if(IsPrime(bi, out var divisor))
+            {
+               return "is prime";
+            }
+            else
+            {
+                return $"is not prime, divisor = {divisor}";
+            }
+        }
+
         static void RSATest()
         {
+            Console.WriteLine("RSATest");
+
             //RSAKeyGenerator keyGen = new RSAKeyGenerator(new MillerRabinTest(0.995f));
-            RSAKeyGenerator keyGen = new RSAKeyGenerator(new SolovayStrassenTest(0.995f));
+            RSAKeyGenerator keyGen = new RSAKeyGenerator(new MillerRabinTest(0.995f), RSAKeyType.RSA2048);
 
             Stopwatch sw = new Stopwatch();
 
             sw.Start();
 
-            keyGen.Generate(out BigInteger n, out BigInteger e, out BigInteger d);
+            keyGen.GenerateVulnerable(out BigInteger n, out BigInteger e, out BigInteger d);
+            //keyGen.Generate(out BigInteger n, out BigInteger e, out BigInteger d);
 
             sw.Stop();
 
             long milliseconds = sw.ElapsedMilliseconds;
             TimeSpan elapsed = sw.Elapsed;
 
+            Console.WriteLine("Key generated");
+
             Console.WriteLine($"key generation time: {milliseconds} ms ({elapsed})");
+
+            //Console.WriteLine($"P: {keyGen.P}, {PrimalityInformation(keyGen.P)}");
+            //Console.WriteLine($"Q: {keyGen.Q}, {PrimalityInformation(keyGen.Q)}");
+
+            //Console.WriteLine($"public exponent (e): {e}");
+            //Console.WriteLine($"private exponent (d): {d}");
 
             RSAEncoder encoder = new RSAEncoder(n, e);
             RSADecoder decoder = new RSADecoder(n, d);
@@ -99,7 +165,7 @@ namespace RSA
 
             long totalMilliseconds = 0;
 
-            for(int i = 0; i < nTimes; ++i)
+            for (int i = 0; i < nTimes; ++i)
             {
                 sw.Restart();
 
@@ -120,8 +186,8 @@ namespace RSA
 
         static void Main(string[] args)
         {
-            //RSATest();
-            BenchRSAKeyGeneration();
+            RSATest();
+            //BenchRSAKeyGeneration();
 
             Console.ReadKey();
         }

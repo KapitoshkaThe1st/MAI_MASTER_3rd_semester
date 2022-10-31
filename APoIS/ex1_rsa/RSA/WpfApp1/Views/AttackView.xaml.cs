@@ -5,13 +5,13 @@ namespace RSA_Demo
     /// <summary>
     /// Interaction logic for ModulusFactorizationAttackView.xaml
     /// </summary>
-    public partial class ModulusFactorizationAttackView : UserControl
+    public partial class AttackView : UserControl
     {
-        public ModulusFactorizationAttackView()
+        public AttackView()
         {
             InitializeComponent();
 
-            DataContext = new ModulusFactorizationAttackViewModel();
+            DataContext = new AttackViewModel();
         }
     }
 }

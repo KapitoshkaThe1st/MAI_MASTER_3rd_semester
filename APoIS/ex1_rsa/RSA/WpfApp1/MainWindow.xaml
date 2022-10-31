@@ -8,8 +8,8 @@
         Title="RSA demo" Height="550" Width="800" MinHeight="300" MinWidth="350">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="79*"/>
-            <ColumnDefinition Width="81*"/>
+            <ColumnDefinition Width="33*"/>
+            <ColumnDefinition Width="47*"/>
         </Grid.ColumnDefinitions>
         <TabControl Grid.ColumnSpan="2">
             <TabItem>
@@ -45,11 +45,11 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <Label>Modulus factorization attack</Label>
+                        <Label>Attack</Label>
                     </StackPanel>
                 </TabItem.Header>
                 <TabItem.Content>
-                    <local:ModulusFactorizationAttackView/>
+                    <local:AttackView/>
                 </TabItem.Content>
             </TabItem>
         </TabControl>

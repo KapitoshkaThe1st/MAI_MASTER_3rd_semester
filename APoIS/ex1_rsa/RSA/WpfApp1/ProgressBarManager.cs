@@ -40,7 +40,8 @@ namespace RSA_Demo
         protected void UpdateTime()
         {
             var elapsedTime = _sw.Elapsed;
-            Application.Current.Dispatcher.Invoke(() => {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
                 _viewModel.ElapsedTimeString = $"{elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}";
             });
             //Debug.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
@@ -80,9 +81,10 @@ namespace RSA_Demo
             _viewModel.CurrentProgress = progress;
         }
 
-        public void SetDescription(string description)
+        public string Description
         {
-            _viewModel.Description = description;
+            get => _viewModel.Description;
+            set => _viewModel.Description = value;
         }
 
         public void Close()

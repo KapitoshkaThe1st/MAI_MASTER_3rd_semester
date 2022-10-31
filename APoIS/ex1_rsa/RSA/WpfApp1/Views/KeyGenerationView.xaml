@@ -42,6 +42,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <CheckBox Content="Generate vulnerable keys" IsChecked="{Binding GenerateVulnerableKey}"/>
             </StackPanel>
             <Grid DockPanel.Dock="Bottom" 
                         Visibility="{Binding ElementName=ShowPQCheckBox, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">

@@ -86,7 +86,22 @@ namespace RSA_Demo
             }
         }
 
-        private const float _requiredPrimalityProbability = 0.995f;
+
+        private bool _generateVulnerableKey = false;
+        public bool GenerateVulnerableKey
+        {
+            get => _generateVulnerableKey;
+            set
+            {
+                if (_generateVulnerableKey != value)
+                {
+                    _generateVulnerableKey = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private const float _requiredPrimalityProbability = 0.99995f;
 
         private Dictionary<(RSAKeyType keyType, PrimalityTestType testType), RSAKeyGenerator> _keyGenerators;
 
@@ -117,7 +132,16 @@ namespace RSA_Demo
             Task.Factory.StartNew(() =>
             {
                 var keyGenerator = GetKeyGenerator();
-                keyGenerator.Generate(out var modulus, out var publicExponent, out var privateExponent);
+
+                BigInteger modulus, publicExponent, privateExponent;
+                if (GenerateVulnerableKey)
+                {
+                    keyGenerator.GenerateVulnerable(out modulus, out publicExponent, out privateExponent);
+                }
+                else
+                {
+                    keyGenerator.Generate(out modulus, out publicExponent, out privateExponent);
+                }
 
                 Modulus = modulus;
                 PublicExponent = publicExponent;
@@ -132,7 +156,7 @@ namespace RSA_Demo
                 });
             });
 
-            _progressBarManager.Start("Generating keys");
+            _progressBarManager.Start(GenerateVulnerableKey ? "Generating vulnerable keys" : "Generating keys");
         }
     }
 }

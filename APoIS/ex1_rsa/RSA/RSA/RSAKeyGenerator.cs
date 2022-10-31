@@ -86,16 +86,72 @@ namespace RSA
 
                 modulus = P * Q;
 
+                BigInteger phiN = (P - 1) * (Q - 1);
+
+                publicExponent = defaultPublicExponent;
+
+                if (MathUtils.ModularMultiplicativeInverse(publicExponent, phiN, out privateExponent) && BigInteger.Pow(3 * privateExponent, 4) >= modulus)
+                {
+                    break;
+                }
+            }
+        }
+
+        private BigInteger GeneratePrimeNumberBetween(BigInteger a, BigInteger b)
+        {
+            BigInteger p = _rnd.NextBigInteger(a, b);
+
+            if (p.IsEven)
+            {
+                p += 1;
+            }
+
+            while (true)
+            {
+                if (p >= b)
+                {
+                    p = _rnd.NextBigInteger(a, b);
+
+                    if (p.IsEven)
+                    {
+                        p += 1;
+                    }
+                }
+
+                if (_primalityTest.Test(p))
+                {
+                    break;
+                }
+                p += 2;
+            }
+
+            return p;
+        }
+
+        public void GenerateVulnerable(out BigInteger modulus, out BigInteger publicExponent, out BigInteger privateExponent)
+        {
+            Q = GeneratePrimeNumber(false);
+
+            while (true)
+            {
+                P = GeneratePrimeNumberBetween(Q + 1, 2 * Q);
+
+                if (P <= Q || P >= 2 * Q)
+                {
+                    Console.WriteLine("Q >= P || P <= 2 * Q");
+                    continue;
+                }
+
+                modulus = P * Q;
+
                 BigInteger phiQ = Q - 1;
                 BigInteger phiP = P - 1;
 
                 BigInteger phiN = phiP * phiQ;
 
-                BigInteger treshold = BigIntegerExtensions.Sqrt(BigIntegerExtensions.Sqrt(modulus)) / 3 + 1;
+                privateExponent = GeneratePrimeNumberBetween(0, BigIntegerExtensions.Sqrt(BigIntegerExtensions.Sqrt(modulus)) / 3);
 
-                publicExponent = defaultPublicExponent;
-
-                if(MathUtils.ModularMultiplicativeInverse(publicExponent, phiN, out privateExponent) && privateExponent >= treshold)
+                if (MathUtils.ModularMultiplicativeInverse(privateExponent, phiN, out publicExponent))
                 {
                     break;
                 }

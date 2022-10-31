@@ -114,12 +114,55 @@ namespace RSA
         {
             if (ExtendedGreatestCommonDivisor(num, modulus, out BigInteger a, out BigInteger b) == 1)
             {
-                result = ((num * a) % modulus == BigInteger.One) ? a : b;
+                //result = ((num * a) % modulus == BigInteger.One) ? a : b;
+                BigInteger toCheck = (num * a) % modulus;
+                if (toCheck == BigInteger.One || toCheck == (BigInteger.One - modulus))
+                {
+                    result = a;
+                }
+                else
+                {
+                    result = b;
+                }
+
+                if(result < 0)
+                {
+                    result = (result % modulus + modulus) % modulus;
+
+                }
+
                 return true;
             }
 
             result = BigInteger.Zero;
             return false;
+        }
+
+        public static int SolveQuadraticEquation(BigInteger a, BigInteger b, BigInteger c, out BigInteger x1, out BigInteger x2)
+        {
+            var discriminant = b * b - 4 * a * c;
+
+            Console.WriteLine($"discriminant: {discriminant}");
+
+            if (discriminant > 0)
+            {
+                x1 = (-b + BigIntegerExtensions.Sqrt(discriminant)) / (2 * a);
+                x2 = (-b - BigIntegerExtensions.Sqrt(discriminant)) / (2 * a);
+                return 2;
+            }
+
+            else if (discriminant == 0)
+            {
+                x1 = -b / (2 * a);
+                x2 = 0;
+                return 1;
+            }
+            else
+            {
+                x1 = 0;
+                x2 = 0;
+                return 0;
+            }
         }
     }
 }
