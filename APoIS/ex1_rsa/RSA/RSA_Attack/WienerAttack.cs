@@ -14,6 +14,8 @@ namespace RSA_Attack
 
         public WienerAttack(Action<float> updateCallback, Action<bool> endCallBack) : base(updateCallback, endCallBack) { }
 
+        private bool HasUpdateCallback => _updateCallback != null; 
+
         private static IEnumerable<BigInteger> ToContinuedFraction(BigInteger num, BigInteger denom)
         {
             while (num != 1)
@@ -56,14 +58,28 @@ namespace RSA_Attack
 
         public override RSAAttackResult Attack(BigInteger modulus, BigInteger publicExponent)
         {
+            return Attack(modulus, publicExponent, out _);
+        }
+
+        public RSAAttackResult Attack(BigInteger modulus, BigInteger publicExponent, out int convergentsChecked)
+        {
+            IEnumerable<(BigInteger p, BigInteger q)> convergents = Convergents(publicExponent, modulus);
+
             // если бы не потребность в вычислении прогресса, то можно было бы не приводить
             // к листу и не производить таким образом вычисление ненужных подходящих дробей
-            var convergents = Convergents(publicExponent, modulus).ToList();
+            float step = 0f;
+            if (HasUpdateCallback)
+            {
+                var convergentsList = convergents.ToList();
+                convergents = convergentsList;
+                step = 100f / convergentsList.Count;
+            }
 
-            float step = 100f / convergents.Count;
-
+            convergentsChecked = 0;
             foreach (var (k, d) in convergents)
             {
+                convergentsChecked++;
+
                 if (d < 1 || k <= 0)
                 {
                     _updateCallback?.Invoke(step);

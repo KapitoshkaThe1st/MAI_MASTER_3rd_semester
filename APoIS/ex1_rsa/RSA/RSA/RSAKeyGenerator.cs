@@ -130,10 +130,15 @@ namespace RSA
 
         public void GenerateVulnerable(out BigInteger modulus, out BigInteger publicExponent, out BigInteger privateExponent)
         {
-            Q = GeneratePrimeNumber(false);
-
+            int k = 0;
             while (true)
             {
+                if(k == 0)
+                {
+                    Q = GeneratePrimeNumber(false);
+                    k = 100;
+                }
+
                 P = GeneratePrimeNumberBetween(Q + 1, 2 * Q);
 
                 if (P <= Q || P >= 2 * Q)
@@ -155,6 +160,7 @@ namespace RSA
                 {
                     break;
                 }
+                k--;
             }
         }
     }

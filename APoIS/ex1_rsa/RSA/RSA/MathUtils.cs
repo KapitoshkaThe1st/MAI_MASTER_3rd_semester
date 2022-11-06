@@ -142,7 +142,7 @@ namespace RSA
         {
             var discriminant = b * b - 4 * a * c;
 
-            Console.WriteLine($"discriminant: {discriminant}");
+            //Console.WriteLine($"discriminant: {discriminant}");
 
             if (discriminant > 0)
             {

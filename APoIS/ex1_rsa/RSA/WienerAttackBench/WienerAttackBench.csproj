@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RSA\RSA.csproj" />
+    <ProjectReference Include="..\RSA_Attack\RSA_Attack.csproj" />
+  </ItemGroup>
+
+</Project>

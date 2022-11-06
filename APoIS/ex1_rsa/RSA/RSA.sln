@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSA_Attack", "RSA_Attack\RS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RSA_Demo", "RSA_Demo\RSA_Demo.csproj", "{DE259435-89E1-4858-9BC6-0CD2AB81D43D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WienerAttackBench", "WienerAttackBench\WienerAttackBench.csproj", "{C04FB915-7DF3-4805-83CD-EB33BFEB0D90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{DE259435-89E1-4858-9BC6-0CD2AB81D43D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE259435-89E1-4858-9BC6-0CD2AB81D43D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE259435-89E1-4858-9BC6-0CD2AB81D43D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C04FB915-7DF3-4805-83CD-EB33BFEB0D90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C04FB915-7DF3-4805-83CD-EB33BFEB0D90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C04FB915-7DF3-4805-83CD-EB33BFEB0D90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C04FB915-7DF3-4805-83CD-EB33BFEB0D90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

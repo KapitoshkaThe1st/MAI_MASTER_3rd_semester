@@ -127,19 +127,18 @@ namespace RSA
         // https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method
         public static BigInteger Sqrt(BigInteger num)
         {
-            BigInteger a = num / 2 + 1;
-            BigInteger prev = 0;
-            //int k = 0;
-            while(a != prev)
+            if (num <= 1)
+                return num;
+
+            BigInteger x0 = num / 2;
+            BigInteger x1 = (x0 + num / x0) / 2;
+
+            while (x1 < x0)
             {
-                prev = a;
-                a = (a + num / a) / 2;
-                //k++;
+                x0 = x1;
+                x1 = (x0 + num / x0) / 2;
             }
-
-            //Console.WriteLine($"k: {k}");
-
-            return a;
+            return x0;
         }
     }
 }
