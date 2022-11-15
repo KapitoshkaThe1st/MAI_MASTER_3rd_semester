@@ -7,16 +7,15 @@ using GF_Operations;
 namespace TestProject
 {
     [TestClass]
-    public class GF256OperationsTest
+    public class GF256MathTest
     {
         //https://codyplanteen.com/assets/rs/gf256_prim.pdf -- тут есть все неприводимые многочлены
-
         #region Arithmetics test data
 
         private static uint _aes_reductionPolynomial = 0x11b; // AES reduction polynomial
 
         // тестовые таблицы взяты отсюда https://crypto.stackexchange.com/questions/67634/efficient-pen-and-paper-calculation-of-the-galois-field-multiplication
-        private static byte[,] _aesLogTable = new byte[16, 16]
+        private static uint[,] _aesLogTable = new uint[16, 16]
         {
             { 0x00, 0x00, 0x19, 0x01, 0x32, 0x02, 0x1A, 0xC6, 0x4B, 0xC7, 0x1B, 0x68, 0x33, 0xEE, 0xDF, 0x03 },
             { 0x64, 0x04, 0xE0, 0x0E, 0x34, 0x8D, 0x81, 0xEF, 0x4C, 0x71, 0x08, 0xC8, 0xF8, 0x69, 0x1C, 0xC1 },
@@ -36,7 +35,7 @@ namespace TestProject
             { 0x67, 0x4A, 0xED, 0xDE, 0xC5, 0x31, 0xFE, 0x18, 0x0D, 0x63, 0x8C, 0x80, 0xC0, 0xF7, 0x70, 0x07 }
         };
 
-        private static byte[,] _aesExpTable = new byte[16, 16]
+        private static uint[,] _aesExpTable = new uint[16, 16]
         {
             { 0x01, 0x03, 0x05, 0x0F, 0x11, 0x33, 0x55, 0xFF, 0x1A, 0x2E, 0x72, 0x96, 0xA1, 0xF8, 0x13, 0x35 },
             { 0x5F, 0xE1, 0x38, 0x48, 0xD8, 0x73, 0x95, 0xA4, 0xF7, 0x02, 0x06, 0x0A, 0x1E, 0x22, 0x66, 0xAA },
@@ -60,42 +59,39 @@ namespace TestProject
 
         // алгоритм умножения с помощью таблиц тут:
         // https://crypto.stackexchange.com/questions/67634/efficient-pen-and-paper-calculation-of-the-galois-field-multiplication
-        public static GF256 LookupMultiplication(GF256 a, GF256 b)
+        public static uint LookupMultiplication(uint a, uint b)
         {
-            if (a == GF256.Zero || b == GF256.Zero)
-                return GF256.Zero;
+            if (a == 0 || b == 0)
+                return 0;
 
-            byte aByte = (byte)a;
-            byte bByte = (byte)b;
+            uint aByte = a;
+            uint bByte = b;
 
-            int x = _aesLogTable[aByte >> 4, aByte & 0xF];
-            int y = _aesLogTable[bByte >> 4, bByte & 0xF];
+            uint x = _aesLogTable[aByte >> 4, aByte & 0xF];
+            uint y = _aesLogTable[bByte >> 4, bByte & 0xF];
 
-            int s = x + y;
+            uint s = x + y;
             if (s >= 255)
             {
                 s -= 255;
             }
 
-            byte result = _aesExpTable[s >> 4, s & 0xF];
+            uint result = _aesExpTable[(int)(s >> 4), (int)(s & 0xF)];
 
-            return new GF256(result);
+            return result;
         }
 
         [TestMethod]
         public void AdditionTest()
         {
-            for (int i = 0; i < 256; ++i)
+            for (uint i = 0; i < 256; ++i)
             {
-                for (int j = 0; j < 256; ++j)
+                for (uint j = 0; j < 256; ++j)
                 {
-                    var a = new GF256((byte)i);
-                    var b = new GF256((byte)j);
+                    var result = GF256.Add(i, j);
+                    var actualAnswer = i ^ j;
 
-                    var result = GF256.Add(a, b);
-                    var actualAnswer = new GF256((byte)(i ^ j));
-
-                    Assert.AreEqual(actualAnswer, result, $"i={i.ToString("X2")}, j={j.ToString("X2")}, actual_answer={((byte)actualAnswer).ToString("X2")}, result={((byte)result).ToString("X2")}");
+                    Assert.AreEqual(actualAnswer, result, $"i={i.ToString("X2")}, j={j.ToString("X2")}, actual_answer={actualAnswer.ToString("X2")}, result={result.ToString("X2")}");
                 }
             }
         }
@@ -103,72 +99,47 @@ namespace TestProject
         [TestMethod]
         public void MultiplicationTest()
         {
-            for (int i = 0; i < 256; ++i)
+            for (uint i = 0; i < 256; ++i)
             {
-                for (int j = 0; j < 256; ++j)
+                for (uint j = 0; j < 256; ++j)
                 {
-                    var a = new GF256((byte)i);
-                    var b = new GF256((byte)j);
-
-                    var result = (byte)GF256.Multiply(a, b, _aes_reductionPolynomial);
-                    var actualAnswer = (byte)LookupMultiplication(a, b);
+                    var result = GF256.Multiply(i, j, _aes_reductionPolynomial);
+                    var actualAnswer = LookupMultiplication(i, j);
 
                     Assert.AreEqual(result, actualAnswer, $"i={i.ToString("X2")}, j={j.ToString("X2")}, actual_answer={actualAnswer.ToString("X2")}, naive={result.ToString("X2")}");
                 }
             }
         }
 
-        private GF256 NaiveInverse(GF256 e, uint m)
+        private uint NaiveInverse(uint e, uint m)
         {
-            for(int i = 1; i < 256; ++i)
+            for(uint i = 1; i < 256; ++i)
             {
-                var gf = new GF256((byte)i);
-                if(GF256.Multiply(gf, e, m) == GF256.One)
+                if(GF256.Multiply(i, e, m) == 1)
                 {
-                    return gf;
+                    return i;
                 }
             }
-            return GF256.Zero;
-        }
-
-        [TestMethod]
-        public void InverseTest()
-        {
-            Assert.ThrowsException<ArgumentException>(() =>
-            {
-                GF256.Inverse(GF256.Zero, _aes_reductionPolynomial);
-            });
-
-            for(int i = 0; i < 256; ++i)
-            {
-                var e = new GF256((byte)i);
-
-                var actualAnswer = NaiveInverse(e, _aes_reductionPolynomial);
-                var result = NaiveInverse(e, _aes_reductionPolynomial);
-
-                Assert.AreEqual(actualAnswer, result, $"i={i.ToString("X2")}, actual_answer={((byte)actualAnswer).ToString("X2")}, naive={((byte)result).ToString("X2")}");
-            }
+            return 0;
         }
 
         #region ExtendedGreatestCommonDivisor test
 
-        private GF256 NaiveGCD(GF256 a, GF256 b)
+        private uint NaiveGCD(uint a, uint b)
         {
-            for(int i = Math.Min((byte)a, (byte)b); i >= 0; --i)
+            for(uint i = Math.Min(a, b); i >= 0; --i)
             {
-                var e = new GF256((byte)i);
-
-                GF256 r;
-                GF256.DivRem(a, e, out r);
-                if (r != GF256.Zero)
+                uint r;
+                GF256.DivRem(a, i, out r);
+                if (r != 0)
                 {
                     continue;
                 }
 
-                GF256.DivRem(b, e, out r);
-                if (r == GF256.Zero)
+                GF256.DivRem(b, i, out r);
+                if (r == 0)
                 {
-                    return e;
+                    return i;
                 }
             }
 
@@ -178,29 +149,27 @@ namespace TestProject
         [TestMethod]
         public void ExtendedGreatestCommonDivisorTest()
         {
-            var testElement = new GF256(0b1000);
+            uint testElement = 0b1000;
             // должно вернуть значение ненулевого аргумента 
-            Assert.AreEqual(GF256.ExtendedGreatestCommonDivisor(testElement, GF256.Zero, _aes_reductionPolynomial, out _, out _), testElement);
-            Assert.AreEqual(GF256.ExtendedGreatestCommonDivisor(GF256.Zero, testElement, _aes_reductionPolynomial, out _, out _), testElement);
+            Assert.AreEqual(GF256.ExtendedGreatestCommonDivisor(testElement, 0, _aes_reductionPolynomial, out _, out _), testElement);
+            Assert.AreEqual(GF256.ExtendedGreatestCommonDivisor(0, testElement, _aes_reductionPolynomial, out _, out _), testElement);
 
-            for (int i = 1; i < 256; ++i)
+            for (uint i = 1; i < 256; ++i)
             {
-                for (int j = 1; j < 256; ++j)
+                for (uint j = 1; j < 256; ++j)
                 {
-                    var f = new GF256((byte)i);
-                    var g = new GF256((byte)j);
 
-                    var gcd = GF256.ExtendedGreatestCommonDivisor(f, g, _aes_reductionPolynomial, out var a, out var b);
+                    var gcd = GF256.ExtendedGreatestCommonDivisor(i, j, _aes_reductionPolynomial, out var a, out var b);
 
-                    var naiveGcd = NaiveGCD(f, g);
+                    var naiveGcd = NaiveGCD(i, j);
 
                     // проверка, что считается именно НОД
                     Assert.AreEqual(naiveGcd, gcd, $"naive gcd: {naiveGcd}, gcd: {gcd}");
 
-                    var testValue = GF256.Multiply(a, f, _aes_reductionPolynomial) + GF256.Multiply(b, g, _aes_reductionPolynomial);
+                    var testValue = GF256.Add(GF256.Multiply(a, i, _aes_reductionPolynomial), GF256.Multiply(b, j, _aes_reductionPolynomial));
 
                     // проверка услови связи d с коэффициентам a и b
-                    Assert.AreEqual(testValue, gcd, $"f: {f}, g: {g}, gcd: {gcd}, a: {a}, b: {b}, a * f + b * g: {testValue}");
+                    Assert.AreEqual(testValue, gcd, $"j: {i}, i: {j}, gcd: {gcd}, a: {a}, b: {b}, a * f + b * g: {testValue}");
                 }
             }
         }
@@ -210,18 +179,32 @@ namespace TestProject
         [TestMethod]
         public void DivisionTest()
         {
-            for (int i = 1; i < 256; ++i)
+            for (uint i = 1; i < 256; ++i)
             {
-                for (int j = 1; j < 256; ++j)
+                for (uint j = 1; j < 256; ++j)
                 {
-                    var a = new GF256((byte)i);
-                    var b = new GF256((byte)j);
+                    var q = GF256.DivRem(i, j, out var r);
 
-                    var q = GF256.DivRem(a, b, out var r);
-
-                    var testValue = GF256.Multiply(b, q, _aes_reductionPolynomial) + r;
-                    Assert.AreEqual(testValue, a, $"i: {i}, j: {j} a: {a}, b: {b}, q: {q}, r: {r}, b * q + r: {testValue}");
+                    var testValue = GF256.Add(GF256.Multiply(j, q, _aes_reductionPolynomial), r);
+                    Assert.AreEqual(testValue, i, $"i: {i}, j: {j}, q: {q}, r: {r}, b * q + r: {testValue}");
                 }
+            }
+        }
+
+        [TestMethod]
+        public void InverseTest()
+        {
+            Assert.ThrowsException<ArithmeticException>(() =>
+            {
+                GF256.Inverse(0, _aes_reductionPolynomial);
+            });
+
+            for (uint i = 1; i < 256; ++i)
+            {
+                var actualAnswer = NaiveInverse(i, _aes_reductionPolynomial);
+                var result = GF256.Inverse(i, _aes_reductionPolynomial);
+
+                Assert.AreEqual(actualAnswer, result, $"i={i.ToString("X2")}, actual_answer={((byte)actualAnswer).ToString("X2")}, naive={((byte)result).ToString("X2")}");
             }
         }
     }
