@@ -4,23 +4,14 @@ namespace GF_Operations
 {
     class Program
     {
-
         static void Main(string[] args)
         {
-            bool success = GF256.TryParse("x^10", out uint gfElement);
+            var application = new Application();
+            application.Process(args);
 
-            if (success)
-            {
-                Console.WriteLine($"Success: gf(256) element: {gfElement}");
-            }
-            else
-            {
-                Console.WriteLine($"Fail");
-            }
+            //bool success = BinaryPolynomial32.TryParse("x^2 + x^32 + 1", out ulong polynomial);
 
-            Console.WriteLine("DONE");
-
-            Console.ReadKey();
+            //Console.WriteLine(polynomial);
         }
     }
 }
