@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace DES
 {
@@ -16,9 +17,9 @@ namespace DES
             bool success = true;
             foreach(var (key, block, excpected) in _testCases)
             {
-                DESEncoder encoder = new DESEncoder(key);
+                DES encoder = new DES(key);
 
-                ulong cipher = encoder.Encode(block);
+                ulong cipher = BitConverter.ToUInt64(encoder.Encode(BitConverter.GetBytes(block)));
                 if(cipher != excpected)
                 {
                     success = false;
@@ -41,6 +42,41 @@ namespace DES
 
         static void Main(string[] args)
         {
+            ulong key = 0x0E329232EA6D0D73;
+
+            DES des = new DES(key);
+
+            string text = "some data 123";
+
+            //Console.WriteLine($"text: {text}, length: {text.Length}");
+
+            //var cipher = des.Encode(Encoding.ASCII.GetBytes(text));
+
+            //foreach(var b in cipher)
+            //{
+            //    Console.WriteLine(Convert.ToString(b, 16).PadLeft(8, '0'));
+            //}
+
+            //string decodedText = Encoding.ASCII.GetString(des.Decode(cipher));
+
+            //Console.WriteLine($"decodedText: {decodedText}, length: {decodedText.Length}");
+
+
+            Console.WriteLine($"text: {text}, length: {text.Length}");
+
+            var cipher = des.EncodeString(text);
+
+            foreach (var b in cipher)
+            {
+                Console.WriteLine(Convert.ToString(b, 16).PadLeft(8, '0'));
+            }
+
+            string decodedText = des.DecodeString(cipher);
+
+            Console.WriteLine($"decodedText: {decodedText}, length: {decodedText.Length}");
+
+            // ----------------------------------------------
+
             //Console.WriteLine(BinaryFormatting.Format(0xFFFFFFFF));
 
             //for (int i = 0; i < 32; ++i)
@@ -48,7 +84,7 @@ namespace DES
             //    Console.WriteLine("0b" + new string('1', i) + ",");
             //}
 
-            TestDES();
+            //TestDES();
 
             //ulong key = 0x133457799BBCDFF1;
             //ulong block = 0x0123456789ABCDEF;

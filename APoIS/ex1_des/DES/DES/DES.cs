@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DES
 {
-    public class DESEncoder
+    public sealed class DES
     {
         private static byte[] _ipTable = new byte[64] {
             58, 50, 42, 34, 26, 18, 10, 2,
@@ -133,12 +129,15 @@ namespace DES
         };
 
         private ulong _key;
-        private ulong[] _roundKeys;
+        private ulong[] _encodeRoundKeys;
+        private ulong[] _decodeRoundKeys;
 
-        public DESEncoder(ulong key)
+        public DES(ulong key)
         {
             _key = key;
-            _roundKeys = GenerateKeys(_key);
+            _encodeRoundKeys = GenerateKeys(_key);
+            _decodeRoundKeys = (ulong[])_encodeRoundKeys.Clone();
+            Array.Reverse(_decodeRoundKeys);
         }
 
         private static ulong Permutation(ulong block, int inputBitLength, byte[] permutationTable)
@@ -157,22 +156,22 @@ namespace DES
             return result;
         }
 
-        static ulong InitialPermutation(ulong block64)
+        private static ulong InitialPermutation(ulong block64)
         {
             return Permutation(block64, 64, _ipTable);
         }
 
-        static ulong FinalPermutation(ulong block64)
+        private static ulong FinalPermutation(ulong block64)
         {
             return Permutation(block64, 64, _iipTable);
         }
 
-        static ulong BlockExpansion(uint block32)
+        private static ulong BlockExpansion(uint block32)
         {
             return Permutation(block32, 32, _eTable);
         }
 
-        static uint SBlock(ulong block48)
+        private static uint SBlock(ulong block48)
         {
             Console.WriteLine($"block: {BinaryFormatting.Format(block48, 6, 48)}");
 
@@ -202,12 +201,12 @@ namespace DES
             return result;
         }
 
-        static uint PPermutation(uint block32)
+        private static uint PPermutation(uint block32)
         {
             return (uint)Permutation(block32, 32, _pTable);
         }
 
-        static uint F(uint block32, ulong key48)
+        private static uint F(uint block32, ulong key48)
         {
             ulong block48 = BlockExpansion(block32);
             Console.WriteLine($"expanded block: {BinaryFormatting.Format(block48, 6, 48)}");
@@ -229,7 +228,7 @@ namespace DES
             return pPermutationApplied;
         }
 
-        static ulong Round(ulong block64, ulong key48)
+        private static ulong Round(ulong block64, ulong key48)
         {
             uint l = (uint)(block64 >> 32);
             uint r = (uint)(block64 & 0xFFFFFFFF);
@@ -240,7 +239,7 @@ namespace DES
             return ((ulong)r << 32) | (l ^ F(r, key48));
         }
 
-        public static uint Parity(byte num)
+        private static uint Parity(byte num)
         {
             // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
             uint result = 0;
@@ -255,7 +254,7 @@ namespace DES
             return result;
         }
 
-        static ulong KeyExpansion(ulong key56)
+        private static ulong KeyExpansion(ulong key56)
         {
             ulong result = 0;
             for (int i = 0; i < 8; ++i)
@@ -272,13 +271,13 @@ namespace DES
             return result;
         }
 
-        static ulong KeyPermutation(ulong key56)
+        private static ulong KeyPermutation(ulong key56)
         {
             return Permutation(key56, 56, _cpTable);
 
         }
 
-        static ulong KeyFirstPermutation(ulong key64)
+        private static ulong KeyFirstPermutation(ulong key64)
         {
             return Permutation(key64, 64, _kpTable);
         }
@@ -319,13 +318,13 @@ namespace DES
             0b1111111111111111111111111111111,
         };
 
-        public static uint RotateLeft(uint num, int bitLength, int count)
+        private static uint RotateLeft(uint num, int bitLength, int count)
         {
             uint mask = _masks[bitLength];
             return (num << count) & mask | (num >> (bitLength - count));
         }
 
-        static ulong[] GenerateKeys(ulong key64)
+        private static ulong[] GenerateKeys(ulong key64)
         {
             ulong[] result = new ulong[16];
 
@@ -363,12 +362,12 @@ namespace DES
             return result;
         }
 
-        static ulong SwapParts(ulong block64)
+        private static ulong SwapParts(ulong block64)
         {
             return (block64 << 32) | (block64 >> 32);
         }
 
-        static ulong Encode(ulong block64, ulong[] roundKeys)
+        private static ulong Encode(ulong block64, ulong[] roundKeys)
         {
             Console.WriteLine($"before ip block64: {BinaryFormatting.Format(block64, 4, 64)}");
 
@@ -387,9 +386,97 @@ namespace DES
             return FinalPermutation(block64);
         }
 
-        public ulong Encode(ulong block64)
+        private ulong EncodeBlock(ulong block64)
         {
-            return Encode(block64, _roundKeys);
+            return Encode(block64, _encodeRoundKeys);
+        }
+
+        private ulong DecodeBlock(ulong block64)
+        {
+            return Encode(block64, _decodeRoundKeys);
+        }
+
+        private const int blockSizeInBytes = 8;
+
+        public byte[] Encode(byte[] data)
+        {
+            int remainder = data.Length % blockSizeInBytes;
+            int cipherByteLength = data.Length + (remainder == 0 ? 0 : blockSizeInBytes - remainder);
+
+            byte[] result = new byte[cipherByteLength];
+
+            for(int i = 0; i < data.Length; i += blockSizeInBytes)
+            {
+                ulong block;
+                if(i + blockSizeInBytes > data.Length)
+                {
+                    block = 0;
+                    for(int j = 0; j < remainder; ++j)
+                    {
+                        byte curByte = data[i + j];
+                        Console.WriteLine($"byte: {BinaryFormatting.Format(curByte, 8)}");
+
+                        int shift = j * 8;
+                        Console.WriteLine($"shift: {shift}");
+
+                        block |= ((ulong)curByte << shift);
+
+                        Console.WriteLine($"block: {BinaryFormatting.Format(block, 8, 64)}");
+
+                    }
+                }
+                else
+                {
+                    block = BitConverter.ToUInt64(new ReadOnlySpan<byte>(data, i, blockSizeInBytes));
+                }
+
+                ulong blockCipher = EncodeBlock(block);
+
+                Array.Copy(BitConverter.GetBytes(blockCipher), 0, result, i, blockSizeInBytes);
+            }
+
+            return result;
+        }
+
+        public byte[] Decode(byte[] data)
+        {
+            int remainder = data.Length % blockSizeInBytes;
+
+            if(remainder != 0)
+            {
+                throw new ArgumentException("length of data to decode must be multiple of 8 bytes");
+            }
+
+            byte[] result = new byte[data.Length];
+
+            for (int i = 0; i < data.Length; i += blockSizeInBytes)
+            {
+                ulong blockCipher = BitConverter.ToUInt64(new ReadOnlySpan<byte>(data, i, blockSizeInBytes));
+                ulong block = DecodeBlock(blockCipher);
+
+                Array.Copy(BitConverter.GetBytes(block), 0, result, i, blockSizeInBytes);
+            }
+
+            return result;
+        }
+
+        public byte[] EncodeString(string text)
+        {
+            int stringBytesCount = System.Text.Encoding.UTF8.GetByteCount(text);
+            byte[] bytes = new byte[stringBytesCount + sizeof(int)];
+
+            Array.Copy(BitConverter.GetBytes(stringBytesCount), bytes, sizeof(int));
+            Array.Copy(System.Text.Encoding.UTF8.GetBytes(text), 0, bytes, sizeof(int), stringBytesCount);
+
+            return Encode(bytes);
+        }
+
+        public string DecodeString(byte[] data)
+        {
+            byte[] bytes = Decode(data);
+            int stringByteLength = BitConverter.ToInt32(new ReadOnlySpan<byte>(bytes, 0, sizeof(int)));
+
+            return System.Text.Encoding.UTF8.GetString(new ReadOnlySpan<byte>(bytes, sizeof(int), stringByteLength));
         }
     }
 }
