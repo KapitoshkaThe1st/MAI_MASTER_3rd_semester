@@ -2,6 +2,7 @@
 
 namespace DES
 {
+    //https://page.math.tu-berlin.de/~kant/teaching/hess/krypto-ws2006/des.htm
     public sealed class DES
     {
         private static byte[] _ipTable = new byte[64] {
@@ -173,30 +174,20 @@ namespace DES
 
         private static uint SBlock(ulong block48)
         {
-            Console.WriteLine($"block: {BinaryFormatting.Format(block48, 6, 48)}");
-
             uint result = 0;
             for (int k = 0; k < 8; ++k)
             {
                 byte sblock = (byte)(block48 & 0b111111UL);
 
-                Console.WriteLine($"b_{8 - k}: {BinaryFormatting.Format(sblock, 6, 6)}");
-
                 int i = ((sblock >> 5) << 1) | (sblock & 1); // первый и последний бит шестизначного числа
                 int j = (sblock >> 1) & ~(1 << 4); // все биты кроме первого и последнего
 
-                Console.WriteLine($"i: {i}, j: {j}");
-
                 byte newBits = __sTables[7 - k, i, j];
-
-                Console.WriteLine($"new bits: {BinaryFormatting.Format(newBits, 4, 4)}");
 
                 result |= ((uint)newBits << (4 * k));
 
                 block48 >>= 6;
             }
-
-            Console.WriteLine($"result: {BinaryFormatting.Format(result, 4, 32)}");
 
             return result;
         }
@@ -209,21 +200,9 @@ namespace DES
         private static uint F(uint block32, ulong key48)
         {
             ulong block48 = BlockExpansion(block32);
-            Console.WriteLine($"expanded block: {BinaryFormatting.Format(block48, 6, 48)}");
-
             ulong keyApplied = block48 ^ key48;
-
-            Console.WriteLine($"key: {BinaryFormatting.Format(key48, 6, 48)}");
-
-            Console.WriteLine($"key applied: {BinaryFormatting.Format(keyApplied, 6, 48)}");
-
             uint sBlocksApplied = SBlock(keyApplied);
-
-            Console.WriteLine($"s-block applied: {BinaryFormatting.Format(sBlocksApplied, 4, 32)}");
-
             uint pPermutationApplied = PPermutation(sBlocksApplied);
-
-            Console.WriteLine($"p-permutation applied: {BinaryFormatting.Format(pPermutationApplied, 4, 32)}");
 
             return pPermutationApplied;
         }
@@ -232,9 +211,6 @@ namespace DES
         {
             uint l = (uint)(block64 >> 32);
             uint r = (uint)(block64 & 0xFFFFFFFF);
-
-            Console.WriteLine($"l: {BinaryFormatting.Format(l, 4, 32)}");
-            Console.WriteLine($"r: {BinaryFormatting.Format(r, 4, 32)}");
 
             return ((ulong)r << 32) | (l ^ F(r, key48));
         }
@@ -274,7 +250,6 @@ namespace DES
         private static ulong KeyPermutation(ulong key56)
         {
             return Permutation(key56, 56, _cpTable);
-
         }
 
         private static ulong KeyFirstPermutation(ulong key64)
@@ -330,33 +305,17 @@ namespace DES
 
             //ulong key64 = KeyExpansion(key56);
 
-            Console.WriteLine($"key64: {BinaryFormatting.Format(key64)}");
-
             ulong key56 = KeyFirstPermutation(key64);
-
-            Console.WriteLine($"key56: {BinaryFormatting.Format(key56, 7, 56)}");
 
             uint c = (uint)(key56 >> 28);
             uint d = (uint)(key56 & 0xFFFFFFF);
-
-            Console.WriteLine($"c_0: {BinaryFormatting.Format(c, 7, 28)}");
-            Console.WriteLine($"d_0: {BinaryFormatting.Format(d, 7, 28)}");
 
             for (int i = 0; i < 16; ++i)
             {
                 c = RotateLeft(c, 28, _shiftTable[i]);
                 d = RotateLeft(d, 28, _shiftTable[i]);
 
-                Console.WriteLine($"c_{i + 1}: {BinaryFormatting.Format(c, 7, 28)}");
-                Console.WriteLine($"d_{i + 1}: {BinaryFormatting.Format(d, 7, 28)}");
-
                 result[i] = KeyPermutation(((ulong)c << 28) | d);
-            }
-
-            int k = 1;
-            foreach (var key in result)
-            {
-                Console.WriteLine($"key_{k++}: {BinaryFormatting.Format(key, 6, 48)}");
             }
 
             return result;
@@ -369,15 +328,10 @@ namespace DES
 
         private static ulong Encode(ulong block64, ulong[] roundKeys)
         {
-            Console.WriteLine($"before ip block64: {BinaryFormatting.Format(block64, 4, 64)}");
-
             block64 = InitialPermutation(block64);
-
-            Console.WriteLine($"after ip block64: {BinaryFormatting.Format(block64, 4, 64)}");
 
             for (int i = 0; i < 16; ++i)
             {
-                Console.WriteLine($"iteration: {i}");
                 block64 = Round(block64, roundKeys[i]);
             }
 
@@ -414,15 +368,10 @@ namespace DES
                     for(int j = 0; j < remainder; ++j)
                     {
                         byte curByte = data[i + j];
-                        Console.WriteLine($"byte: {BinaryFormatting.Format(curByte, 8)}");
 
                         int shift = j * 8;
-                        Console.WriteLine($"shift: {shift}");
 
                         block |= ((ulong)curByte << shift);
-
-                        Console.WriteLine($"block: {BinaryFormatting.Format(block, 8, 64)}");
-
                     }
                 }
                 else
