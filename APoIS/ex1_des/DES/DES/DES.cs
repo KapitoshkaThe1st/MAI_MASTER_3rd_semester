@@ -133,9 +133,28 @@ namespace DES
         private ulong[] _encodeRoundKeys;
         private ulong[] _decodeRoundKeys;
 
-        public DES(ulong key)
+        private bool CheckParity(ulong key64)
         {
-            _key = key;
+            for(int i = 0; i < 8; ++i)
+            {
+                if(BitOperations.Parity((byte)(key64 & 0xFF)) != 1)
+                {
+                    return false;
+                }
+                key64 >>= 8; 
+            }
+
+            return true;
+        }
+
+        public DES(ulong key64)
+        {
+            if (!CheckParity(key64))
+            {
+                throw new ArgumentException("key parity-test failed");
+            }
+
+            _key = key64;
             _encodeRoundKeys = GenerateKeys(_key);
             _decodeRoundKeys = (ulong[])_encodeRoundKeys.Clone();
             Array.Reverse(_decodeRoundKeys);
@@ -223,39 +242,6 @@ namespace DES
             return ((ulong)r << 32) | (l ^ F(r, key48));
         }
 
-        private static uint Parity(byte num)
-        {
-            // https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
-            uint result = 0;
-
-            // каждая итерация обнуляет младший установленный бит
-            while (num != 0)
-            {
-                num &= (byte)(num - 1);
-                result ^= 1;
-            }
-
-            return result;
-        }
-
-        // расширение 56-битного ключа, который представлен 
-        private static ulong KeyExpansion(ulong key56)
-        {
-            ulong result = 0;
-            for (int i = 0; i < 8; ++i)
-            {
-                byte part = (byte)(key56 & 0b1111111);
-                uint bitToAdd = Parity(part) == 0 ? 1U : 0U;
-                part = (byte)(part | (bitToAdd << 7));
-
-                result |= ((ulong)part << 8 * i);
-
-                key56 >>= 7;
-            }
-
-            return result;
-        }
-
         private static ulong KeyPermutation(ulong key56)
         {
             return Permutation(key56, 56, _cpTable);
@@ -312,10 +298,6 @@ namespace DES
         {
             ulong[] result = new ulong[16];
 
-            // в Смарте написано, что 56-битный ключ, представлен 64-битной строкой, с битами четности, тогда зачем KeyExpansion ???
-            // все равно после первой перестановки биты четности отбросятся, значит можно передать сразу 56-битный ключ ???
-            //ulong key64 = KeyExpansion(key56);
-
             // начальная перестановка битов ключа-64 отбрасывание контрольных битов -> ключ-56
             ulong key56 = KeyFirstPermutation(key64);
 
@@ -349,7 +331,7 @@ namespace DES
             block64 = InitialPermutation(block64);
 
             // бестолковая перестановка, чтобы соответствовать стандарту
-            block64 = SwapParts(block64);
+            //block64 = SwapParts(block64);
 
             // 16 раундов кодирования
             for (int i = 0; i < 16; ++i)

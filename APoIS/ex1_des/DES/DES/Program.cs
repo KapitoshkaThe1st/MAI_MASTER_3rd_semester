@@ -102,8 +102,33 @@ namespace DES
         //    //Console.WriteLine($"decodedBlock: {decodedBlock} (hex: {Convert.ToString((long)decodedBlock, 16)})");
         //}
 
+        //private static bool CheckParity(ulong key64)
+        //{
+        //    for (int i = 0; i < 8; ++i)
+        //    {
+        //        byte b = (byte)(key64 & 0xFF);
+        //        Console.WriteLine(Convert.ToString(b, 2).PadLeft(8, '0'));
+
+        //        if (BitOperations.Parity(b) != 1)
+        //        {
+        //            return false;
+        //        }
+        //        key64 >>= 8;
+        //    }
+
+        //    return true;
+        //}
+
         static void Main(string[] args)
         {
+            //ulong key64Correct = 0xFEFEFEFEFEFEFEFE;
+            //ulong key64Wrong = 0xFFFEFEFEFEFEFEFE;
+
+            //Console.WriteLine(CheckParity(key64Correct));
+            //Console.WriteLine(CheckParity(key64Wrong));
+
+            //Console.ReadKey();
+
             Application application = new Application();
             application.Process(args);
         }

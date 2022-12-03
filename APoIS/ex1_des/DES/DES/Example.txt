@@ -3,3 +3,6 @@ string-decode -k 0xFFFFFFFFFFFFFF -c 24038945675f1030a5453c5c274056ae
 
 file-encode -k 0xFFFFFFFFFFFFFF -i TestFile.txt -o cipher.data
 file-decode -k 0xFFFFFFFFFFFFFF -i cipher.data -o DecodedTestFile.txt 
+
+file-encode -k 0xFFFFFFFFFFFFFF -i TestFile.txt -o TestFile.txt.des
+file-decode -k 0xFFFFFFFFFFFFFF -i TestFile.txt.des -o DecodedTestFile.txt

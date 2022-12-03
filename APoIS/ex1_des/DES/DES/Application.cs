@@ -10,6 +10,24 @@ namespace DES
 {
     class Application
     {
+        // расширение 56-битного ключа до битного битами контроля четности (в каждом байте окажется нечетное количество единиц)
+        private static ulong KeyExpansion(ulong key56)
+        {
+            ulong result = 0;
+            for (int i = 0; i < 8; ++i)
+            {
+                byte part = (byte)(key56 & 0b1111111);
+                uint bitToAdd = BitOperations.Parity(part) == 0 ? 1U : 0U;
+                part = (byte)(part | (bitToAdd << 7));
+
+                result |= ((ulong)part << 8 * i);
+
+                key56 >>= 7;
+            }
+
+            return result;
+        }
+
         private static ulong ParseKey(string keyHex)
         {
             ulong key;
@@ -38,6 +56,7 @@ namespace DES
         private static void StringEncoding(StringEncodingOptions options)
         {
             ulong key = ParseKey(options.Key);
+            key = KeyExpansion(key);
 
             var des = new DES(key);
             var bytes = des.EncodeString(options.String);
@@ -67,6 +86,7 @@ namespace DES
             }
 
             ulong key = ParseKey(options.Key);
+            key = KeyExpansion(key);
 
             var des = new DES(key);
             string decodedString = des.DecodeString(bytes);
@@ -78,15 +98,17 @@ namespace DES
         private const int _blockSizeInBytes = 8;
         private static void FileEncoding(FileEncodingOptions options)
         {
+            ulong key = ParseKey(options.Key);
+            key = KeyExpansion(key);
+
+            var des = new DES(key);
+
             if (!File.Exists(options.InputFilePath))
             {
                 throw new FileNotFoundException($"file encoding error: input file '{options.InputFilePath}' does not exist");
             }
 
             long filesize = (new FileInfo(options.InputFilePath)).Length;
-
-            ulong key = ParseKey(options.Key);
-            var des = new DES(key);
 
             try
             {
@@ -98,7 +120,8 @@ namespace DES
                     {
                         if (firstIteration)
                         {
-                            bw.Write(des.Encode(BitConverter.GetBytes(filesize)));
+                            var filesizeBytes = des.Encode(BitConverter.GetBytes(filesize));
+                            bw.Write(filesizeBytes);
                         }
 
                         byte[] bytes = br.ReadBytes(_fileEncodingChunkSize);
@@ -156,6 +179,8 @@ namespace DES
             }
 
             ulong key = ParseKey(options.Key);
+            key = KeyExpansion(key);
+
             var des = new DES(key);
 
             try
