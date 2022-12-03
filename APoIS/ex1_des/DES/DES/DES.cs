@@ -5,6 +5,7 @@ namespace DES
     //https://page.math.tu-berlin.de/~kant/teaching/hess/krypto-ws2006/des.htm
     public sealed class DES
     {
+        // первичная перестановка
         private static byte[] _ipTable = new byte[64] {
             58, 50, 42, 34, 26, 18, 10, 2,
             60, 52, 44, 36, 28, 20, 12, 4,
@@ -16,6 +17,20 @@ namespace DES
             63, 55, 47, 39, 31, 23, 15, 7
         };
 
+        // обратная к первичной перестановка
+        private static byte[] _iipTable = new byte[64] {
+            40, 8, 48, 16, 56, 24, 64, 32,
+            39, 7, 47, 15, 55, 23, 63, 31,
+            38, 6, 46, 14, 54, 22, 62, 30,
+            37, 5, 45, 13, 53, 21, 61, 29,
+            36, 4, 44, 12, 52, 20, 60, 28,
+            35, 3, 43, 11, 51, 19, 59, 27,
+            34, 2, 42, 10, 50, 18, 58, 26,
+            33, 1, 41,  9, 49, 17, 57, 25
+        };
+
+
+        // перестановка с расширением
         private static byte[] _eTable = new byte[48]
         {
             32,  1,  2,  3,  4,  5,
@@ -28,6 +43,7 @@ namespace DES
             28, 29, 30, 31, 32,  1
         };
 
+        // последняя перестановка в F
         private static byte[] _pTable = new byte[32]
         {
             16,  7, 20, 21,
@@ -40,17 +56,7 @@ namespace DES
             22, 11,  4, 25
         };
 
-        private static byte[] _iipTable = new byte[64] {
-            40, 8, 48, 16, 56, 24, 64, 32,
-            39, 7, 47, 15, 55, 23, 63, 31,
-            38, 6, 46, 14, 54, 22, 62, 30,
-            37, 5, 45, 13, 53, 21, 61, 29,
-            36, 4, 44, 12, 52, 20, 60, 28,
-            35, 3, 43, 11, 51, 19, 59, 27,
-            34, 2, 42, 10, 50, 18, 58, 26,
-            33, 1, 41,  9, 49, 17, 57, 25
-        };
-
+        // таблица подстановок s-block
         private static byte[,,] _sTables = new byte[8, 4, 16] {
             { // 0
                 { 14,  4, 13, 1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9, 0,  7 },
@@ -102,6 +108,7 @@ namespace DES
             },
         };
 
+        // первая перестановка при генерации ключей
         private static byte[] _kpTable = new byte[56] {
             57, 49, 41, 33, 25, 17,  9,
             1,  58, 50, 42, 34, 26, 18,
@@ -113,6 +120,7 @@ namespace DES
             21, 13,  5, 28, 20, 12,  4
         };
 
+        // последняя перестановка при генерации ключей
         private static byte[] _cpTable = new byte[48] {
             14, 17, 11, 24,  1,  5,
              3, 28, 15,  6, 21, 10,
@@ -124,6 +132,7 @@ namespace DES
             46, 42, 50, 36, 29, 32
         };
 
+        // таблица сдвигов для генерации раундовых ключей
         private static byte[] _shiftTable = new byte[16]
         {
             1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1
@@ -133,6 +142,7 @@ namespace DES
         private ulong[] _encodeRoundKeys;
         private ulong[] _decodeRoundKeys;
 
+        // проверка целостности ключа подсчетом числа единиц в каждом бите (должно быть нечетное число единиц)
         private bool CheckParity(ulong key64)
         {
             for(int i = 0; i < 8; ++i)
@@ -149,17 +159,22 @@ namespace DES
 
         public DES(ulong key64)
         {
+            // проверка целостности ключа
             if (!CheckParity(key64))
             {
                 throw new ArgumentException("key parity-test failed");
             }
 
             _key = key64;
+            // генерация раундовых ключей для шифрования
             _encodeRoundKeys = GenerateKeys(_key);
+
+            // получение раундовых ключей для дешифрования -- ключи для шифрования в обратном порядке
             _decodeRoundKeys = (ulong[])_encodeRoundKeys.Clone();
             Array.Reverse(_decodeRoundKeys);
         }
 
+        // перестановка в общем виде
         private static ulong Permutation(ulong block, int inputBitLength, byte[] permutationTable)
         {
             ulong result = 0;
@@ -176,16 +191,19 @@ namespace DES
             return result;
         }
 
+        // первичная перестановка
         private static ulong InitialPermutation(ulong block64)
         {
             return Permutation(block64, 64, _ipTable);
         }
 
+        // последняя перестановка -- обратная к первичной
         private static ulong FinalPermutation(ulong block64)
         {
             return Permutation(block64, 64, _iipTable);
         }
 
+        // перестановка с расширением блока
         private static ulong BlockExpansion(uint block32)
         {
             return Permutation(block32, 32, _eTable);
@@ -202,6 +220,7 @@ namespace DES
                 int i = ((sblock >> 5) << 1) | (sblock & 1); // первый и последний бит шестизначного числа
                 int j = (sblock >> 1) & ~(1 << 4); // все биты кроме первого и последнего
 
+                // подстановка
                 byte newBits = _sTables[7 - k, i, j];
 
                 result |= ((uint)newBits << (4 * k));
@@ -212,10 +231,12 @@ namespace DES
             return result;
         }
 
+        // последняя перестановка в F
         private static uint PPermutation(uint block32)
         {
             return (uint)Permutation(block32, 32, _pTable);
         }
+
 
         private static uint F(uint block32, ulong key48)
         {
@@ -234,12 +255,11 @@ namespace DES
             return pPermutationApplied;
         }
 
-        private static ulong Round(ulong block64, ulong key48)
+        private static void Round(ref uint block32L, ref uint block32R, ulong key48)
         {
-            uint l = (uint)(block64 >> 32);
-            uint r = (uint)(block64 & 0xFFFFFFFF);
-
-            return ((ulong)r << 32) | (l ^ F(r, key48));
+            uint newBlock32R = block32L ^ F(block32R, key48);
+            block32L = block32R;
+            block32R = newBlock32R;
         }
 
         private static ulong KeyPermutation(ulong key56)
@@ -250,48 +270,6 @@ namespace DES
         private static ulong KeyFirstPermutation(ulong key64)
         {
             return Permutation(key64, 64, _kpTable);
-        }
-
-        private static uint[] _masks = new uint[]
-        {
-            0,
-            0b1,
-            0b11,
-            0b111,
-            0b1111,
-            0b11111,
-            0b111111,
-            0b1111111,
-            0b11111111,
-            0b111111111,
-            0b1111111111,
-            0b11111111111,
-            0b111111111111,
-            0b1111111111111,
-            0b11111111111111,
-            0b111111111111111,
-            0b1111111111111111,
-            0b11111111111111111,
-            0b111111111111111111,
-            0b1111111111111111111,
-            0b11111111111111111111,
-            0b111111111111111111111,
-            0b1111111111111111111111,
-            0b11111111111111111111111,
-            0b111111111111111111111111,
-            0b1111111111111111111111111,
-            0b11111111111111111111111111,
-            0b111111111111111111111111111,
-            0b1111111111111111111111111111,
-            0b11111111111111111111111111111,
-            0b111111111111111111111111111111,
-            0b1111111111111111111111111111111,
-        };
-
-        private static uint RotateLeft(uint num, int bitLength, int count)
-        {
-            uint mask = _masks[bitLength];
-            return (num << count) & mask | (num >> (bitLength - count));
         }
 
         private static ulong[] GenerateKeys(ulong key64)
@@ -309,8 +287,8 @@ namespace DES
             for (int i = 0; i < 16; ++i)
             {
                 // циклический сдвиг каждой части в пределах 28 бит на число, зависещае от номера ключа 
-                c = RotateLeft(c, 28, _shiftTable[i]);
-                d = RotateLeft(d, 28, _shiftTable[i]);
+                c = BitOperations.RotateLeft(c, 28, _shiftTable[i]);
+                d = BitOperations.RotateLeft(d, 28, _shiftTable[i]);
 
                 // склеивание частей и применение конечной перестановки для ключа
                 result[i] = KeyPermutation(((ulong)c << 28) | d);
@@ -319,28 +297,22 @@ namespace DES
             return result;
         }
 
-        // меняет местами правую и левую часть (по 32 бита) в 64-битном блоке
-        private static ulong SwapParts(ulong block64)
-        {
-            return (block64 << 32) | (block64 >> 32);
-        }
-
         private static ulong Encode(ulong block64, ulong[] roundKeys)
         {
             // применяем начальную перестановку
             block64 = InitialPermutation(block64);
 
-            // бестолковая перестановка, чтобы соответствовать стандарту
-            //block64 = SwapParts(block64);
+            uint l = (uint)(block64 >> 32);
+            uint r = (uint)(block64 & 0xFFFFFFFF);
 
             // 16 раундов кодирования
             for (int i = 0; i < 16; ++i)
             {
-                block64 = Round(block64, roundKeys[i]);
+                Round(ref l, ref r, roundKeys[i]);
             }
 
-            // еще одна бестолковая перестановка, чтобы соответствовать стандарту
-            block64 = SwapParts(block64);
+            // склейка частей обратно с бестолковой перестановкой, как в стандарте
+            block64 = ((ulong)r << 32) | l;
 
             // последнаяя перестановка, обратная к начальной
             return FinalPermutation(block64);
