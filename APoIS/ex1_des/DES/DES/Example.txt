@@ -1,5 +1,5 @@
 ﻿string-encode -k 0xFFFFFFFFFFFFFF -s "test message"
-string-decode -k 0xFFFFFFFFFFFFFF -c 24038945675f1030a5453c5c274056ae
+string-decode -k 0xFFFFFFFFFFFFFF -c 9d9d65df7f7d13b2eb55c0a4e844ab4f
 
 file-encode -k 0xFFFFFFFFFFFFFF -i TestFile.txt -o cipher.data
 file-decode -k 0xFFFFFFFFFFFFFF -i cipher.data -o DecodedTestFile.txt 

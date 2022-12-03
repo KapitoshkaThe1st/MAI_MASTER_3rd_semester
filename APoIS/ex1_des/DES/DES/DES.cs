@@ -389,21 +389,13 @@ namespace DES
 
         public byte[] EncodeString(string text)
         {
-            int stringBytesCount = System.Text.Encoding.UTF8.GetByteCount(text);
-            byte[] bytes = new byte[stringBytesCount + sizeof(int)];
-
-            Array.Copy(BitConverter.GetBytes(stringBytesCount), bytes, sizeof(int));
-            Array.Copy(System.Text.Encoding.UTF8.GetBytes(text), 0, bytes, sizeof(int), stringBytesCount);
-
-            return Encode(bytes);
+            return Encode(System.Text.Encoding.UTF8.GetBytes(text));
         }
 
         public string DecodeString(byte[] data)
         {
             byte[] bytes = Decode(data);
-            int stringByteLength = BitConverter.ToInt32(new ReadOnlySpan<byte>(bytes, 0, sizeof(int)));
-
-            return System.Text.Encoding.UTF8.GetString(new ReadOnlySpan<byte>(bytes, sizeof(int), stringByteLength));
+            return System.Text.Encoding.UTF8.GetString(bytes);
         }
     }
 }
