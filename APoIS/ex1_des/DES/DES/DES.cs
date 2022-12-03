@@ -51,7 +51,7 @@ namespace DES
             33, 1, 41,  9, 49, 17, 57, 25
         };
 
-        private static byte[,,] __sTables = new byte[8, 4, 16] {
+        private static byte[,,] _sTables = new byte[8, 4, 16] {
             { // 0
                 { 14,  4, 13, 1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9, 0,  7 },
                 {  0, 15,  7, 4, 14,  2, 13,  1, 10,  6, 12, 11,  9,  5, 3,  8 },
@@ -172,6 +172,7 @@ namespace DES
             return Permutation(block32, 32, _eTable);
         }
 
+        // каждый из 8-ми кусочков из 6-ти бит преобразуются в 8 кусочков из 4-х бит при помощи s-block'а -- нелинейность
         private static uint SBlock(ulong block48)
         {
             uint result = 0;
@@ -182,7 +183,7 @@ namespace DES
                 int i = ((sblock >> 5) << 1) | (sblock & 1); // первый и последний бит шестизначного числа
                 int j = (sblock >> 1) & ~(1 << 4); // все биты кроме первого и последнего
 
-                byte newBits = __sTables[7 - k, i, j];
+                byte newBits = _sTables[7 - k, i, j];
 
                 result |= ((uint)newBits << (4 * k));
 
@@ -199,9 +200,16 @@ namespace DES
 
         private static uint F(uint block32, ulong key48)
         {
+            // расширение блока перестановкой с расширением
             ulong block48 = BlockExpansion(block32);
+
+            // сложение с раундовым ключом
             ulong keyApplied = block48 ^ key48;
+            
+            // применение S-block'ов: на входе 8 6-битных кусочков, на выходе 8 4-х битных кусочков
             uint sBlocksApplied = SBlock(keyApplied);
+
+            // еще одна перестановка
             uint pPermutationApplied = PPermutation(sBlocksApplied);
 
             return pPermutationApplied;
@@ -230,6 +238,7 @@ namespace DES
             return result;
         }
 
+        // расширение 56-битного ключа, который представлен 
         private static ulong KeyExpansion(ulong key56)
         {
             ulong result = 0;
@@ -303,24 +312,32 @@ namespace DES
         {
             ulong[] result = new ulong[16];
 
+            // в Смарте написано, что 56-битный ключ, представлен 64-битной строкой, с битами четности, тогда зачем KeyExpansion ???
+            // все равно после первой перестановки биты четности отбросятся, значит можно передать сразу 56-битный ключ ???
             //ulong key64 = KeyExpansion(key56);
 
+            // начальная перестановка битов ключа-64 отбрасывание контрольных битов -> ключ-56
             ulong key56 = KeyFirstPermutation(key64);
 
+            // делим на две частии по 28 бит: левая и правая
             uint c = (uint)(key56 >> 28);
             uint d = (uint)(key56 & 0xFFFFFFF);
 
+            // генерируем 16 ключей, по ключу на раунд
             for (int i = 0; i < 16; ++i)
             {
+                // циклический сдвиг каждой части в пределах 28 бит на число, зависещае от номера ключа 
                 c = RotateLeft(c, 28, _shiftTable[i]);
                 d = RotateLeft(d, 28, _shiftTable[i]);
 
+                // склеивание частей и применение конечной перестановки для ключа
                 result[i] = KeyPermutation(((ulong)c << 28) | d);
             }
 
             return result;
         }
 
+        // меняет местами правую и левую часть (по 32 бита) в 64-битном блоке
         private static ulong SwapParts(ulong block64)
         {
             return (block64 << 32) | (block64 >> 32);
@@ -328,15 +345,22 @@ namespace DES
 
         private static ulong Encode(ulong block64, ulong[] roundKeys)
         {
+            // применяем начальную перестановку
             block64 = InitialPermutation(block64);
 
+            // бестолковая перестановка, чтобы соответствовать стандарту
+            block64 = SwapParts(block64);
+
+            // 16 раундов кодирования
             for (int i = 0; i < 16; ++i)
             {
                 block64 = Round(block64, roundKeys[i]);
             }
 
+            // еще одна бестолковая перестановка, чтобы соответствовать стандарту
             block64 = SwapParts(block64);
 
+            // последнаяя перестановка, обратная к начальной
             return FinalPermutation(block64);
         }
 
