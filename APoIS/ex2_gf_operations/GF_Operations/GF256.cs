@@ -134,7 +134,7 @@ namespace GF_Operations
         {
             if (ExtendedGreatestCommonDivisor(e, modulo, modulo, out uint a, out uint b) == 1)
             {
-                return a;
+                return Multiply(e, a, modulo) == 1 ? a : b;
             }
 
             throw new ArithmeticException($"Could not find multiplicative inverse for {e}");
