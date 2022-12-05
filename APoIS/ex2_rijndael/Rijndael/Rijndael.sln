@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32901.82
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rijndael", "Rijndael\Rijndael.csproj", "{2FF91020-DBDB-4F46-90A7-4B2795315014}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SBoxComputation", "SBoxComputation\SBoxComputation.csproj", "{027AE532-DB31-47D5-9A49-C03A9701F659}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2FF91020-DBDB-4F46-90A7-4B2795315014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FF91020-DBDB-4F46-90A7-4B2795315014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FF91020-DBDB-4F46-90A7-4B2795315014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FF91020-DBDB-4F46-90A7-4B2795315014}.Release|Any CPU.Build.0 = Release|Any CPU
+		{027AE532-DB31-47D5-9A49-C03A9701F659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{027AE532-DB31-47D5-9A49-C03A9701F659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{027AE532-DB31-47D5-9A49-C03A9701F659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{027AE532-DB31-47D5-9A49-C03A9701F659}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F13DBFF1-EBAC-4F05-9BA0-021FF6F08D5A}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="GF_Operations">
+      <HintPath>..\..\..\ex2_gf_operations\GF_Operations\bin\Release\net5.0\GF_Operations.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
