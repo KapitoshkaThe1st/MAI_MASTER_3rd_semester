@@ -6,6 +6,7 @@ using GF_Operations;
 using System.IO;
 
 using Rijndael.Options;
+using System.Threading;
 
 namespace Rijndael
 {
@@ -143,6 +144,12 @@ namespace Rijndael
             return (byte)((word >> (i * 8)) & 0xFFU);
         }
 
+        private static uint SetByte(uint word, byte b, int i)
+        {
+            int offset = i * 8;
+            return (word & ~(0xFFU << offset)) | ((uint)b << offset);
+        }
+
         private static uint SubByte(uint word)
         {
             return MakeWord(_sBox[GetByte(word, 0)], _sBox[GetByte(word, 1)], _sBox[GetByte(word, 2)], _sBox[GetByte(word, 3)]);
@@ -181,8 +188,8 @@ namespace Rijndael
                 GenerateExpandedKeyAbove6(expandedKey);
             }
 
-            Console.WriteLine("expanded key:");
-            PrintBlock(expandedKey);
+            //Console.WriteLine("expanded key:");
+            //PrintBlock(expandedKey);
 
             return expandedKey;
         }
@@ -219,7 +226,7 @@ namespace Rijndael
 
         ReadOnlySpan<uint> GetRoundKey(int roundNumber)
         {
-            Console.WriteLine($"used round key {roundNumber}");
+            //Console.WriteLine($"used round key {roundNumber}");
             return new ReadOnlySpan<uint>(_expandedKey, roundNumber * _nb, _nb);
         }
 
@@ -387,18 +394,18 @@ namespace Rijndael
         {
             SubBytes(state);
 
-            Console.WriteLine("after sub bytes:");
-            PrintBlock(state);
+            //Console.WriteLine("after sub bytes:");
+            //PrintBlock(state);
 
             ShiftRow(state);
 
-            Console.WriteLine("after shift row:");
-            PrintBlock(state);
+            //Console.WriteLine("after shift row:");
+            //PrintBlock(state);
 
             MixColumn(state);
 
-            Console.WriteLine("after mix column:");
-            PrintBlock(state);
+            //Console.WriteLine("after mix column:");
+            //PrintBlock(state);
 
             AddRoundKey(state, roundKey);
         }
@@ -406,18 +413,18 @@ namespace Rijndael
         private void DecodeRound(uint[] state, ReadOnlySpan<uint> roundKey)
         {
             AddRoundKey(state, roundKey);
-            Console.WriteLine("after add round key:");
-            PrintBlock(state);
+            //Console.WriteLine("after add round key:");
+            //PrintBlock(state);
 
             InverseMixColumn(state);
 
-            Console.WriteLine("after mix column:");
-            PrintBlock(state);
+            //Console.WriteLine("after mix column:");
+            //PrintBlock(state);
 
             InverseShiftRow(state);
 
-            Console.WriteLine("after shift row:");
-            PrintBlock(state);
+            //Console.WriteLine("after shift row:");
+            //PrintBlock(state);
 
             InverseSubBytes(state);
         }
@@ -426,34 +433,34 @@ namespace Rijndael
         {
             SubBytes(state);
 
-            Console.WriteLine("after sub bytes (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after sub bytes (final):");
+            //PrintBlock(state);
 
             ShiftRow(state);
 
-            Console.WriteLine("after shift row (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after shift row (final):");
+            //PrintBlock(state);
 
             AddRoundKey(state, roundKey);
-            Console.WriteLine("after add round key (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after add round key (final):");
+            //PrintBlock(state);
         }
         private void FinalDecodeRound(uint[] state, ReadOnlySpan<uint> roundKey)
         {
             AddRoundKey(state, roundKey);
 
-            Console.WriteLine("after add round key (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after add round key (final):");
+            //PrintBlock(state);
 
             InverseShiftRow(state);
 
-            Console.WriteLine("after inverse shift row (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after inverse shift row (final):");
+            //PrintBlock(state);
 
             InverseSubBytes(state);
 
-            Console.WriteLine("after inverse sub bytes (final):");
-            PrintBlock(state);
+            //Console.WriteLine("after inverse sub bytes (final):");
+            //PrintBlock(state);
         }
 
         public void Test(uint[] block)
@@ -464,64 +471,64 @@ namespace Rijndael
 
         public void EncodeBlock(uint[] block)
         {
-            Console.WriteLine("ENCODING");
+            //Console.WriteLine("ENCODING");
 
             if (block.Length != _nb)
             {
                 throw new ArgumentException($"block must have length of {_nb * 4} bytes");
             }
 
-            Console.WriteLine("input: ");
-            PrintBlock(block);
+            //Console.WriteLine("input: ");
+            //PrintBlock(block);
 
             AddRoundKey(block, GetRoundKey(0));
 
-            Console.WriteLine("added round key: ");
-            PrintBlock(block);
+            //Console.WriteLine("added round key: ");
+            //PrintBlock(block);
 
             for (int i = 0; i < _nr - 1; ++i)
             {
                 EncodeRound(block, GetRoundKey(i + 1));
 
-                Console.WriteLine($"after round {i}: ");
-                PrintBlock(block);
+                //Console.WriteLine($"after round {i}: ");
+                //PrintBlock(block);
             }
 
             FinalEncodeRound(block, GetRoundKey(_nr));
 
-            Console.WriteLine($"after final round: ");
-            PrintBlock(block);
+            //Console.WriteLine($"after final round: ");
+            //PrintBlock(block);
         }
 
         public void DecodeBlock(uint[] block)
         {
-            Console.WriteLine("DECODING");
+            //Console.WriteLine("DECODING");
 
             if (block.Length != _nb)
             {
                 throw new ArgumentException($"block must have length of {_nb * 4} bytes");
             }
 
-            Console.WriteLine("input: ");
-            PrintBlock(block);
+            //Console.WriteLine("input: ");
+            //PrintBlock(block);
 
             FinalDecodeRound(block, GetRoundKey(_nr));
 
-            Console.WriteLine("added round key: ");
-            PrintBlock(block);
+            //Console.WriteLine("added round key: ");
+            //PrintBlock(block);
 
             for (int i = _nr - 1; i >= 1 ; --i)
             {
                 DecodeRound(block, GetRoundKey(i));
 
-                Console.WriteLine($"after round {i}: ");
-                PrintBlock(block);
+                //Console.WriteLine($"after round {i}: ");
+                //PrintBlock(block);
             }
 
             AddRoundKey(block, GetRoundKey(0));
 
-            Console.WriteLine($"after final round: ");
-            PrintBlock(block);
+            //Console.WriteLine($"after final round: ");
+            //PrintBlock(block);
         }
 
         private void PrintBlock(uint[] block)
@@ -531,125 +538,196 @@ namespace Rijndael
                 Console.WriteLine($"{ByteToStringHex(GetByte(block[i], 0))} {ByteToStringHex(GetByte(block[i], 1))} {ByteToStringHex(GetByte(block[i], 2))} {ByteToStringHex(GetByte(block[i], 3))}");
             }
         }
-        public IEnumerable<byte> EncodeDecodeBytesHelper(IEnumerable<byte> bytes, Action<uint[]> action)
+
+        public void ProcessBlock(uint[] block, byte[] result, ref int j, Action<uint[]> action)
         {
-            uint[] block = new uint[_nb];
-
-            var enumerator = bytes.GetEnumerator();
-
-            bool stop = false;
-
-            while (!stop)
+            action.Invoke(block);
+            for (int i = 0; i < block.Length; ++i)
             {
+                result[j++] = GetByte(block[i], 0);
+                result[j++] = GetByte(block[i], 1);
+                result[j++] = GetByte(block[i], 2);
+                result[j++] = GetByte(block[i], 3);
 
-                for (int i = 0; i < _nb * sizeof(uint); ++i)
-                {
-                    if (!enumerator.MoveNext())
-                    {
-                        stop = true;
-                        break;
-                    }
-
-                    int wordIndex = i / 4;
-                    int byteIndex = i % 4;
-
-                    if (byteIndex != 3)
-                    {
-                        block[wordIndex] |= ((uint)enumerator.Current) << (byteIndex * 8);
-                    }
-                }
-
-                action(block);
-
-                foreach (var word in block)
-                {
-                    for(int i = 0; i < 4; ++i)
-                    {
-                        yield return GetByte(word, i);
-                    }
-                }
+                block[i] = 0;
             }
         }
 
-        public IEnumerable<byte> EncodeBytes(IEnumerable<byte> bytes)
+        public byte[] EncodeDecodeBytesHelper(byte[] bytes, int bytesCount, Action<uint[]> action)
         {
-            return EncodeDecodeBytesHelper(bytes, EncodeBlock);
+
+            int blockSizeInBytes = _nb * sizeof(uint);
+            int bytesRemaining = bytesCount % blockSizeInBytes;
+
+            bool bytesCountMultipleOfBlockSizeInBytes = bytesRemaining == 0;
+
+            int resultSize = bytesCount + (bytesCountMultipleOfBlockSizeInBytes ? 0 : (blockSizeInBytes - bytesRemaining));
+
+            byte[] result = new byte[resultSize];
+            uint[] block = new uint[_nb];
+
+            int k = 0;
+            int j = 0;
+            for(int i = 0; i < bytesCount; ++i)
+            {
+                int wordIndex = k / sizeof(uint);
+                int byteInWordIndex = k % sizeof(uint);
+                k++;
+
+                block[wordIndex] = SetByte(block[wordIndex], bytes[i], byteInWordIndex);
+
+                if(k == blockSizeInBytes)
+                {
+                    //Console.WriteLine("block");
+                    //PrintBlock(block);
+
+                    ProcessBlock(block, result, ref j, action);
+                    k = 0;
+                }
+            }
+
+            if(!bytesCountMultipleOfBlockSizeInBytes)
+            {
+                //Console.WriteLine("block");
+                //PrintBlock(block);
+
+                ProcessBlock(block, result, ref j, action);
+            }
+
+            return result;
         }
 
-        public IEnumerable<byte> DecodeBytes(IEnumerable<byte> bytes)
+        public byte[] EncodeBytes(byte[] bytes)
         {
-            return EncodeDecodeBytesHelper(bytes, DecodeBlock);
+            return EncodeDecodeBytesHelper(bytes, bytes.Length, EncodeBlock);
         }
 
-        public IEnumerable<byte> EncodeString(string text)
+        public byte[] DecodeBytes(byte[] bytes)
+        {
+            return EncodeDecodeBytesHelper(bytes, bytes.Length, DecodeBlock);
+        }
+
+        public byte[] EncodeBytes(byte[] bytes, int bytesCount)
+        {
+            return EncodeDecodeBytesHelper(bytes, bytesCount, EncodeBlock);
+        }
+
+        public byte[] DecodeBytes(byte[] bytes, int bytesCount)
+        {
+            return EncodeDecodeBytesHelper(bytes, bytesCount, DecodeBlock);
+        }
+
+        public byte[] EncodeString(string text)
         {
             return EncodeBytes(System.Text.Encoding.UTF8.GetBytes(text));
         }
 
-        public string DecodeString(IEnumerable<byte> data)
+        public string DecodeString(byte[] data)
         {
-            IEnumerable<byte> bytes = DecodeBytes(data);
-            return System.Text.Encoding.UTF8.GetString(bytes.ToArray());
+            byte[] bytes = DecodeBytes(data);
+            return System.Text.Encoding.UTF8.GetString(bytes.ToArray()).Trim('\0');
         }
 
-    }
+        private const int _chunkSize = 1024 * 1024;
+        //private const int _chunkSize = 16;
+        ThreadLocal<byte[]> _buffer = new ThreadLocal<byte[]>(() => new byte[_chunkSize]);
 
-    static class Extensions
-    {
-        private const int _chunkSize = 1024;
-        public static IEnumerable<byte> ReadFrom(string filePath)
+        public void EncodeFile(string inputFilePath, string outputFilePath)
         {
-            using BinaryReader binReader = new BinaryReader(File.Open(filePath, FileMode.Open));
+            if (!File.Exists(inputFilePath))
+            {
+                throw new FileNotFoundException($"input file '{inputFilePath}' does not exist");
+            }
+            
+            var inputFileInfo = new FileInfo(inputFilePath);
+            long inputFileSize = inputFileInfo.Length;
 
-            byte[] buffer = new byte[_chunkSize];
+            Array.Copy(BitConverter.GetBytes(inputFileSize), _buffer.Value, sizeof(long));
+
+            using BinaryReader binReader = new BinaryReader(File.OpenRead(inputFilePath));
+            using BinaryWriter binWriter = new BinaryWriter(File.OpenWrite(outputFilePath));
+
+            int bufferIndex = sizeof(long);
+
+            int bytesRead = binReader.Read(_buffer.Value, bufferIndex, _chunkSize - bufferIndex);
+            var encodedBytes = EncodeBytes(_buffer.Value, bytesRead + bufferIndex);
+
+            binWriter.Write(encodedBytes);
 
             while (true)
             {
-                int bytesRead = binReader.Read(buffer);
+                bytesRead = binReader.Read(_buffer.Value, 0, _chunkSize);
+                encodedBytes = EncodeBytes(_buffer.Value, bytesRead);
 
-                if(bytesRead == 0)
+                binWriter.Write(encodedBytes);
+
+                if(bytesRead < _chunkSize)
                 {
                     break;
-                }
-
-                for (int i = 0; i < bytesRead; ++i)
-                {
-                    yield return buffer[i];
                 }
             }
         }
 
-        public static void WriteTo(string filePath, IEnumerable<byte> bytes)
+        public void DecodeFile(string inputFilePath, string outputFilePath)
         {
-            using BinaryWriter binReader = new BinaryWriter(File.Open(filePath, FileMode.Create));
+            if (!File.Exists(inputFilePath))
+            {
+                throw new FileNotFoundException($"input file '{inputFilePath}' does not exist");
+            }
 
-            byte[] buffer = new byte[_chunkSize];
-            var enumerator = bytes.GetEnumerator();
+            var inputFileInfo = new FileInfo(inputFilePath);
+            long inputFileSize = inputFileInfo.Length;
 
-            bool stop = false;
+            int blockSizeInBytes = _nb * sizeof(uint);
 
-            int i = 0;
-            while (!stop)
-            {                
-                if (!enumerator.MoveNext())
+            if (inputFileSize < blockSizeInBytes)
+            {
+                throw new ArgumentException($"file decoding error: file size must be at least {blockSizeInBytes} bytes long (at least information about file size before encoding)");
+            }
+
+            if (inputFileSize % blockSizeInBytes != 0)
+            {
+                throw new ArgumentException($"file decoding error: cipher-file's length must be multiple of {blockSizeInBytes} byte");
+            }
+
+            using BinaryReader binReader = new BinaryReader(File.OpenRead(inputFilePath));
+            using BinaryWriter binWriter = new BinaryWriter(File.OpenWrite(outputFilePath));
+
+            int bytesRead = binReader.Read(_buffer.Value);
+            var decodedBytes = DecodeBytes(_buffer.Value, bytesRead);
+
+            var span = new ReadOnlySpan<byte>(decodedBytes, 0, sizeof(long));
+            long bytesToRead = BitConverter.ToInt64(span);
+
+            if(bytesToRead <= _chunkSize - sizeof(long))
+            {
+                binWriter.Write(decodedBytes, sizeof(long), (int)bytesToRead);
+                return;
+            }
+            else
+            {
+                binWriter.Write(decodedBytes, sizeof(long), _chunkSize - sizeof(long));
+                bytesToRead -= _chunkSize - sizeof(long);
+            }
+
+            while (bytesToRead > 0)
+            {
+                bytesRead = binReader.Read(_buffer.Value);
+                decodedBytes = DecodeBytes(_buffer.Value, bytesRead);
+                
+                if(bytesToRead < bytesRead)
                 {
-                    stop = true;
+                    binWriter.Write(decodedBytes, 0, (int)bytesToRead);
                     break;
                 }
-
-                buffer[i] = enumerator.Current;
-                i++;
-
-                if (i == _chunkSize)
+                else
                 {
-                    binReader.Write(buffer);
-                    i = 0;
+                    binWriter.Write(decodedBytes, 0, bytesRead);
                 }
+                bytesToRead -= bytesRead;
             }
-            binReader.Write(buffer, 0, i);
         }
-    } 
-
+    }
     class Program
     {
         private static string ByteToStringHex(byte b)
@@ -662,11 +740,34 @@ namespace Rijndael
             return (byte)((word >> (i * 8)) & 0xFFU);
         }
 
+        private static uint SetByte(uint word, byte b, int i)
+        {
+            int offset = i * 8;
+            return (word & ~(0xFFU << offset)) | ((uint)b << offset);
+        }
+
+        private static string UIntToStringHex(uint u)
+        {
+            return $"{ByteToStringHex(GetByte(u, 0))} {ByteToStringHex(GetByte(u, 1))} {ByteToStringHex(GetByte(u, 2))} {ByteToStringHex(GetByte(u, 3))}";
+        }
+
         private static void PrintBlock(uint[] block)
         {
             for (int i = 0; i < block.Length; ++i)
             {
-                Console.WriteLine($"{ByteToStringHex(GetByte(block[i], 0))} {ByteToStringHex(GetByte(block[i], 1))} {ByteToStringHex(GetByte(block[i], 2))} {ByteToStringHex(GetByte(block[i], 3))}");
+                Console.WriteLine(UIntToStringHex(block[i]));
+            }
+        }
+        private static void PrintByteBlock(byte[] block)
+        {
+            for (int i = 0; i < block.Length; i += 4)
+            {
+                byte b0 = block[i];
+                byte b1 = i + 1 < block.Length ? block[i + 1] : (byte)0;
+                byte b2 = i + 2 < block.Length ? block[i + 2] : (byte)0;
+                byte b3 = i + 3 < block.Length ? block[i + 3] : (byte)0;
+
+                Console.WriteLine($"{ByteToStringHex(b0)} {ByteToStringHex(b1)} {ByteToStringHex(b2)} {ByteToStringHex(b3)}");
             }
         }
 
@@ -764,93 +865,41 @@ namespace Rijndael
             }
         }
 
-        private static void ThrowIfInvalidKey(ulong key)
+        static void GenerateFile(string filePath, int size)
         {
-            if (key > 0xFFFFFFFFFFFFFF) // больше 56 бит ключ
-            {
-                throw new ArgumentException("invalid key: key must be 56-bit length");
-            }
+            byte[] data = new byte[size];
+            Random rng = new Random();
+            rng.NextBytes(data);
+            File.WriteAllBytes(filePath, data);
         }
 
-        private static byte[] ParseKey(string keyHex)
+        static bool CompareFiles(string filePath1, string filePath2)
         {
-            byte[] key;
-            try
-            {
-                key = Convert.FromHexString(keyHex);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"invalid key: {ex.Message}");
-            }
-
-            //ThrowIfInvalidKey(key);
-
-            return key;
-        }
-
-        private static void StringEncoding(StringEncodingOptions options)
-        {
-            byte[] key = ParseKey(options.Key);
-
-            var rijndael = new Rinjdael(key);
-            var bytes = rijndael.EncodeString(options.String);
-
-            foreach (var b in bytes)
-            {
-                Console.Write(Convert.ToString(b, 16).PadLeft(2, '0'));
-            }
-            Console.WriteLine();
-        }
-
-        private static void StringDecoding(StringDecodingOptions options)
-        {
-            if (options.Cipher.Length % 16 != 0)
-            {
-                throw new ArgumentException("invalid cipher format: cipher's length must be multiple of 8 byte");
-            }
-
-            byte[] bytes;
-            try
-            {
-                bytes = Convert.FromHexString(options.Cipher);
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"invalid cipher format: {ex.Message}");
-            }
-
-            byte[] key = ParseKey(options.Key);
-
-            var rijndael = new Rinjdael(key);
-            string decodedString = rijndael.DecodeString(bytes);
-
-            Console.WriteLine(decodedString);
-        }
-
-        static void EncodeFile(string filePath, string encodedFilePath, Rinjdael rinjdael)
-        {
-            long fileSize = (new FileInfo(filePath)).Length;
-
-            IEnumerable<byte> bytes = BitConverter.GetBytes(fileSize).Concat(Extensions.ReadFrom(filePath));
-            Extensions.WriteTo(encodedFilePath, rinjdael.EncodeBytes(bytes));
-        }
-
-        static void DecodeFile(string filePath, string decodedFilePath, Rinjdael rinjdael)
-        {
-            IEnumerable<byte> decodedBytes = rinjdael.DecodeBytes(Extensions.ReadFrom(filePath));
-            long decodedFilesize = BitConverter.ToInt64(decodedBytes.Take(sizeof(long)).ToArray());
-
-            Extensions.WriteTo(decodedFilePath, decodedBytes.Skip(sizeof(long)).Take((int)decodedFilesize));
+            return Enumerable.SequenceEqual(File.ReadAllBytes(filePath1), File.ReadAllBytes(filePath2));
         }
 
         static void Main(string[] args)
         {
-            string filePath = "TestFile.txt";
-            string encodedFilePath = "TestFile.txt.rij";
-            string decodedFilePath = "DecodedTestFile.txt";
+            uint word = 0;
+            Console.WriteLine(UIntToStringHex(word));
 
-            //Extensions.WriteTo(decodedFilePath, Extensions.ReadFrom(filePath));
+            word = SetByte(word, 0x11, 0);
+            Console.WriteLine(UIntToStringHex(word));
+
+            word = SetByte(word, 0x22, 1);
+            Console.WriteLine(UIntToStringHex(word));
+
+            word = SetByte(word, 0x33, 2);
+            Console.WriteLine(UIntToStringHex(word));
+
+            word = SetByte(word, 0x33, 3);
+            Console.WriteLine(UIntToStringHex(word));
+
+            //TestRijndael();
+
+
+
+            ////Extensions.WriteTo(decodedFilePath, Extensions.ReadFrom(filePath));
 
             byte[] key = new byte[]
             {
@@ -862,20 +911,73 @@ namespace Rijndael
 
             Rinjdael rj = new Rinjdael(key, BlockLength.Bit128);
 
-            byte[] bytes = new byte[]{
+            byte[] bytes = new byte[] 
+            {
                 0x2b, 0x7e, 0x15, 0x16,
                 0x28, 0xae, 0xd2, 0xa6,
                 0xab, 0xf7, 0x15, 0x88,
                 0x09, 0xcf, 0x4f, 0x3c,
+                0x2b, 0x7e, 0x15, 0x16,
+                0x28, 0xae, 0xd2, 0xa6,
+                0xab, 0xf7, 0x15, 0x88,
+                0x09, 0xcf, 0x4f, 0x3c,
+                0xAA, 0xBB, 0xCC, 0xDD,
+                0xFF
             };
 
-            var encoded = rj.EncodeBytes(bytes).ToList();
-            var decoded = rj.DecodeBytes(encoded).ToList();
+            Console.WriteLine("bytes:");
+            PrintByteBlock(bytes);
 
-            Console.WriteLine($"SUCCESS: {Enumerable.SequenceEqual(bytes, decoded)}");
+            var encoded = rj.EncodeBytes(bytes);
+            Console.WriteLine("encoded:");
+            PrintByteBlock(encoded);
 
-            //EncodeFile(filePath, encodedFilePath, rj);
-            //DecodeFile(encodedFilePath, decodedFilePath, rj);
+            var decoded = rj.DecodeBytes(encoded);
+            Console.WriteLine("decoded:");
+            PrintByteBlock(decoded);
+
+            string str = "test string 1234567";
+            Console.WriteLine($"str: {str}");
+
+            var encodedString = rj.EncodeString(str);
+
+            var decodedString = rj.DecodeString(encodedString);
+            Console.WriteLine($"decodedString: {decodedString}");
+
+            Console.WriteLine($"str == decodedString: {str == decodedString}");
+
+
+            string filePath = "TestFile.txt";
+            //string filePath = "file_9.bin";
+            string encodedFilePath = filePath + ".rij";
+            string decodedFilePath = "Decoded" + filePath;
+
+            //string filePath = "JsonTest.rar";
+            //string encodedFilePath = "JsonTest.rar.rij";
+            //string decodedFilePath = "DecodedJsonTest.rar";
+
+            rj.EncodeFile(filePath, encodedFilePath);
+            rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+            for (int i = 0; i < 10; ++i)
+            {
+                Console.WriteLine($"i = {i}");
+
+                filePath = $"file{i}.bin";
+                GenerateFile(filePath, i * 1024 * 1024);
+
+                encodedFilePath = filePath + ".rij";
+                decodedFilePath = "Decoded" + filePath;
+
+                rj.EncodeFile(filePath, encodedFilePath);
+                rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+                if (!CompareFiles(filePath, decodedFilePath))
+                {
+                    Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
+                    break;
+                }
+            }
         }
     }
 }
