@@ -395,7 +395,7 @@ namespace DES
         public string DecodeString(byte[] data)
         {
             byte[] bytes = Decode(data);
-            return System.Text.Encoding.UTF8.GetString(bytes);
+            return System.Text.Encoding.UTF8.GetString(bytes).Trim('\0');
         }
     }
 }
