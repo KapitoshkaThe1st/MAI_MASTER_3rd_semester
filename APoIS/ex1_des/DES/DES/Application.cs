@@ -222,7 +222,7 @@ namespace DES
             }
             catch (Exception ex)
             {
-                throw new Exception($"file encoding error: {ex.Message}");
+                throw new Exception($"file decoding error: {ex.Message}");
             }
         }
 
