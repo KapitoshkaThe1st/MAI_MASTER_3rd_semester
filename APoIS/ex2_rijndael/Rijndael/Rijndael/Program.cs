@@ -17,7 +17,7 @@ namespace Rijndael
         Bit256 = 256
     }
 
-    public sealed class Rinjdael
+    public sealed class Rijndael
     {
         private int _nk;
         private int _nb;
@@ -32,7 +32,7 @@ namespace Rijndael
             return ((int)blockLength / (4 * 8));
         }
 
-        public Rinjdael(byte[] key, BlockLength blockLength = BlockLength.Bit128)
+        public Rijndael(byte[] key, BlockLength blockLength = BlockLength.Bit128)
         {
             _nk = key.Length / 4;
             _nb = GetNb(blockLength);
@@ -628,8 +628,7 @@ namespace Rijndael
             return System.Text.Encoding.UTF8.GetString(bytes.ToArray()).Trim('\0');
         }
 
-        private const int _chunkSize = 1024 * 1024;
-        //private const int _chunkSize = 16;
+        private const int _chunkSize = 10240 * 96; // k * НОК(16, 24, 32) т.к. размер чанка должен быть кратен длине блока
         ThreadLocal<byte[]> _buffer = new ThreadLocal<byte[]>(() => new byte[_chunkSize]);
 
         public void EncodeFile(string inputFilePath, string outputFilePath)
@@ -645,7 +644,7 @@ namespace Rijndael
             Array.Copy(BitConverter.GetBytes(inputFileSize), _buffer.Value, sizeof(long));
 
             using BinaryReader binReader = new BinaryReader(File.OpenRead(inputFilePath));
-            using BinaryWriter binWriter = new BinaryWriter(File.OpenWrite(outputFilePath));
+            using BinaryWriter binWriter = new BinaryWriter(File.Create(outputFilePath));
 
             int bufferIndex = sizeof(long);
 
@@ -657,6 +656,10 @@ namespace Rijndael
             while (true)
             {
                 bytesRead = binReader.Read(_buffer.Value, 0, _chunkSize);
+
+                if (bytesRead == 0)
+                    break;
+
                 encodedBytes = EncodeBytes(_buffer.Value, bytesRead);
 
                 binWriter.Write(encodedBytes);
@@ -691,7 +694,7 @@ namespace Rijndael
             }
 
             using BinaryReader binReader = new BinaryReader(File.OpenRead(inputFilePath));
-            using BinaryWriter binWriter = new BinaryWriter(File.OpenWrite(outputFilePath));
+            using BinaryWriter binWriter = new BinaryWriter(File.Create(outputFilePath));
 
             int bytesRead = binReader.Read(_buffer.Value);
             var decodedBytes = DecodeBytes(_buffer.Value, bytesRead);
@@ -802,6 +805,14 @@ namespace Rijndael
             }
         };
 
+
+        static BlockLength[] blockLengthes = new BlockLength[]
+        {
+            BlockLength.Bit128,
+            BlockLength.Bit192,
+            BlockLength.Bit256
+        };
+
         static (uint[] block, BlockLength blockLength)[] blocks = new (uint[] block, BlockLength blockLength)[]
         {
             (new uint[]
@@ -833,14 +844,14 @@ namespace Rijndael
             }, BlockLength.Bit256)
         };
 
-        static void TestRijndael()
+        static void TestBlockEncoding()
         {
             bool success = true;
             foreach(var key in keys)
             {
                 foreach(var (block, blockLength) in blocks)
                 {
-                    Rinjdael rj = new Rinjdael(key, blockLength);
+                    Rijndael rj = new Rijndael(key, blockLength);
 
                     var blockCopy = (uint[])block.Clone();
 
@@ -873,110 +884,161 @@ namespace Rijndael
             File.WriteAllBytes(filePath, data);
         }
 
+        static void GenerateTextFile(string filePath, int size)
+        {
+            byte[] data = new byte[size];
+
+            Random rng = new Random();
+            rng.NextBytes(data);
+
+            char[] chars = data.Select(b =>
+            {
+                char c = (char)b;
+                if (char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
+                {
+                    return c;
+                }
+                return ' ';
+            }).ToArray();
+
+            File.WriteAllText(filePath, new string(chars));
+        }
+
         static bool CompareFiles(string filePath1, string filePath2)
         {
             return Enumerable.SequenceEqual(File.ReadAllBytes(filePath1), File.ReadAllBytes(filePath2));
         }
 
-        static void Main(string[] args)
+        static bool TestFileEncodingDecoding(string filePath)
         {
-            uint word = 0;
-            Console.WriteLine(UIntToStringHex(word));
-
-            word = SetByte(word, 0x11, 0);
-            Console.WriteLine(UIntToStringHex(word));
-
-            word = SetByte(word, 0x22, 1);
-            Console.WriteLine(UIntToStringHex(word));
-
-            word = SetByte(word, 0x33, 2);
-            Console.WriteLine(UIntToStringHex(word));
-
-            word = SetByte(word, 0x33, 3);
-            Console.WriteLine(UIntToStringHex(word));
-
-            //TestRijndael();
-
-
-
-            ////Extensions.WriteTo(decodedFilePath, Extensions.ReadFrom(filePath));
-
-            byte[] key = new byte[]
-            {
-                0x2b, 0x7e, 0x15, 0x16,
-                0x28, 0xae, 0xd2, 0xa6,
-                0xab, 0xf7, 0x15, 0x88,
-                0x09, 0xcf, 0x4f, 0x3c,
-            };
-
-            Rinjdael rj = new Rinjdael(key, BlockLength.Bit128);
-
-            byte[] bytes = new byte[] 
-            {
-                0x2b, 0x7e, 0x15, 0x16,
-                0x28, 0xae, 0xd2, 0xa6,
-                0xab, 0xf7, 0x15, 0x88,
-                0x09, 0xcf, 0x4f, 0x3c,
-                0x2b, 0x7e, 0x15, 0x16,
-                0x28, 0xae, 0xd2, 0xa6,
-                0xab, 0xf7, 0x15, 0x88,
-                0x09, 0xcf, 0x4f, 0x3c,
-                0xAA, 0xBB, 0xCC, 0xDD,
-                0xFF
-            };
-
-            Console.WriteLine("bytes:");
-            PrintByteBlock(bytes);
-
-            var encoded = rj.EncodeBytes(bytes);
-            Console.WriteLine("encoded:");
-            PrintByteBlock(encoded);
-
-            var decoded = rj.DecodeBytes(encoded);
-            Console.WriteLine("decoded:");
-            PrintByteBlock(decoded);
-
-            string str = "test string 1234567";
-            Console.WriteLine($"str: {str}");
-
-            var encodedString = rj.EncodeString(str);
-
-            var decodedString = rj.DecodeString(encodedString);
-            Console.WriteLine($"decodedString: {decodedString}");
-
-            Console.WriteLine($"str == decodedString: {str == decodedString}");
-
-
-            string filePath = "TestFile.txt";
-            //string filePath = "file_9.bin";
             string encodedFilePath = filePath + ".rij";
             string decodedFilePath = "Decoded" + filePath;
 
-            //string filePath = "JsonTest.rar";
-            //string encodedFilePath = "JsonTest.rar.rij";
-            //string decodedFilePath = "DecodedJsonTest.rar";
-
-            rj.EncodeFile(filePath, encodedFilePath);
-            rj.DecodeFile(encodedFilePath, decodedFilePath);
-
-            for (int i = 0; i < 10; ++i)
+            foreach (var key in keys)
             {
-                Console.WriteLine($"i = {i}");
-
-                filePath = $"file{i}.bin";
-                GenerateFile(filePath, i * 1024 * 1024);
-
-                encodedFilePath = filePath + ".rij";
-                decodedFilePath = "Decoded" + filePath;
-
-                rj.EncodeFile(filePath, encodedFilePath);
-                rj.DecodeFile(encodedFilePath, decodedFilePath);
-
-                if (!CompareFiles(filePath, decodedFilePath))
+                foreach (var blockLength in blockLengthes)
                 {
-                    Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
-                    break;
+                    Console.WriteLine($"key length: {key.Length * 8}, block length: {blockLength}");
+                    Rijndael rj = new Rijndael(key, blockLength);
+
+                    rj.EncodeFile(filePath, encodedFilePath);
+                    rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+                    if (!CompareFiles(filePath, decodedFilePath))
+                    {
+                        Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
+                        return false;
+                    }
                 }
+            }
+            return true;
+        }
+
+        static bool TestFileEncodingDecoding(int fileSize)
+        {
+            //string filePath = $"file.bin";
+            //GenerateFile(filePath, fileSize);
+
+            string filePath = $"file.txt";
+            GenerateTextFile(filePath, fileSize);
+
+            string encodedFilePath = filePath + ".rij";
+            string decodedFilePath = "Decoded" + filePath;
+
+            foreach(var key in keys)
+            {
+                foreach(var blockLength in blockLengthes)
+                {
+                    Console.WriteLine($"file size: {fileSize}, key length: {key.Length * 8}, block length: {blockLength}");
+                    Rijndael rj = new Rijndael(key, blockLength);
+
+                    rj.EncodeFile(filePath, encodedFilePath);
+                    rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+                    if (!CompareFiles(filePath, decodedFilePath))
+                    {
+                        Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        static void Main(string[] args)
+        {
+            //TestRijndael();
+
+            //byte[] key = keys[0];
+            //Rinjdael rj = new Rinjdael(key, BlockLength.Bit128);
+            //Rinjdael rj = new Rinjdael(key, BlockLength.Bit192);
+            //Rinjdael rj = new Rinjdael(key, BlockLength.Bit256);
+
+            //byte[] bytes = new byte[] 
+            //{
+            //    0x2b, 0x7e, 0x15, 0x16,
+            //    0x28, 0xae, 0xd2, 0xa6,
+            //    0xab, 0xf7, 0x15, 0x88,
+            //    0x09, 0xcf, 0x4f, 0x3c,
+            //    0x2b, 0x7e, 0x15, 0x16,
+            //    0x28, 0xae, 0xd2, 0xa6,
+            //    0xab, 0xf7, 0x15, 0x88,
+            //    0x09, 0xcf, 0x4f, 0x3c,
+            //    0xAA, 0xBB, 0xCC, 0xDD,
+            //    0xFF
+            //};
+
+            //Console.WriteLine("bytes:");
+            //PrintByteBlock(bytes);
+
+            //var encoded = rj.EncodeBytes(bytes);
+            //Console.WriteLine("encoded:");
+            //PrintByteBlock(encoded);
+
+            //var decoded = rj.DecodeBytes(encoded);
+            //Console.WriteLine("decoded:");
+            //PrintByteBlock(decoded);
+
+            //string str = "test string 1234567";
+            //Console.WriteLine($"str: {str}");
+
+            //var encodedString = rj.EncodeString(str);
+
+            //var decodedString = rj.DecodeString(encodedString);
+            //Console.WriteLine($"decodedString: {decodedString}");
+
+            //Console.WriteLine($"str == decodedString: {str == decodedString}");
+
+
+            //string filePath = "TestFile.txt";
+            string filePath = "empty.txt";
+
+
+            bool success = TestFileEncodingDecoding(filePath);
+            if (!success)
+            {
+                Console.WriteLine("Empty file error");
+            }
+
+            for (int i = 1; i < 5; ++i)
+            {
+                int fileSize = i * 1024 * 1024;
+                if (!TestFileEncodingDecoding(fileSize))
+                {
+                    success = false;
+                    goto end;
+                }
+            }
+
+        end:
+            if (success)
+            {
+                Console.WriteLine("SUCCESS");
+            }
+            else
+            {
+                Console.WriteLine("FAIL");
             }
         }
     }
