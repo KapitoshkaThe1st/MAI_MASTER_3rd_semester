@@ -2,7 +2,7 @@
 
 namespace Rijndael.Options
 {
-    [Verb("file-encode", HelpText = "Encodes file with DES algorithm")]
+    [Verb("file-encode", HelpText = "Encodes file with Rijndael algorithm")]
     class FileEncodingOptions : FileOperationOptions
     {
     }

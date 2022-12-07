@@ -1,0 +1,11 @@
+﻿Rijndael.exe file-encode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -i empty.txt -o empty.txt.rij
+Rijndael.exe file-decode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -i empty.txt.rij -o decoded_empty.txt
+
+Rijndael.exe file-encode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -i file.bin -o file.bin.rij
+Rijndael.exe file-decode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -i file.bin.rij -o decoded_file.bin
+
+Rijndael.exe string-encode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -s 1234
+4546b1445d340b0ac39558d9478a7309
+
+Rijndael.exe string-decode -k 0123456789ABCDEFFEDCBA9876543210 -b 128 -c 4546b1445d340b0ac39558d9478a7309
+1234
