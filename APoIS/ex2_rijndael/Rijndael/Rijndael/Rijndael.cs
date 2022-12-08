@@ -131,35 +131,22 @@ namespace Rijndael
             0xE, 0xB, 0xD, 0x9
         };
 
-        private static uint MakeWord(byte b0, byte b1, byte b2, byte b3)
-        {
-            return ((((((uint)b3 << 8) | (uint)b2) << 8) | (uint)b1) << 8) | b0;
-        }
-
-        private static byte GetByte(uint word, int i)
-        {
-            return (byte)((word >> (i * 8)) & 0xFFU);
-        }
-
-        private static uint SetByte(uint word, byte b, int i)
-        {
-            int offset = i * 8;
-            return (word & ~(0xFFU << offset)) | ((uint)b << offset);
-        }
-
         private static uint SubByte(uint word)
         {
-            return MakeWord(_sBox[GetByte(word, 0)], _sBox[GetByte(word, 1)], _sBox[GetByte(word, 2)], _sBox[GetByte(word, 3)]);
+            return WordOperations.MakeWord(_sBox[WordOperations.GetByte(word, 0)], _sBox[WordOperations.GetByte(word, 1)],
+                _sBox[WordOperations.GetByte(word, 2)], _sBox[WordOperations.GetByte(word, 3)]);
         }
 
         private static uint InverseSubByte(uint word)
         {
-            return MakeWord(_inverseSBox[GetByte(word, 0)], _inverseSBox[GetByte(word, 1)], _inverseSBox[GetByte(word, 2)], _inverseSBox[GetByte(word, 3)]);
+            return WordOperations.MakeWord(_inverseSBox[WordOperations.GetByte(word, 0)], _inverseSBox[WordOperations.GetByte(word, 1)],
+                _inverseSBox[WordOperations.GetByte(word, 2)], _inverseSBox[WordOperations.GetByte(word, 3)]);
         }
 
         private uint RotByte(uint word)
         {
-            return MakeWord(GetByte(word, 1), GetByte(word, 2), GetByte(word, 3), GetByte(word, 0));
+            return WordOperations.MakeWord(WordOperations.GetByte(word, 1), WordOperations.GetByte(word, 2),
+                WordOperations.GetByte(word, 3), WordOperations.GetByte(word, 0));
         }
 
         private string ByteToStringHex(byte b)
@@ -173,7 +160,7 @@ namespace Rijndael
 
             for (int i = 0; i < _nk; ++i)
             {
-                expandedKey[i] = MakeWord(key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
+                expandedKey[i] = WordOperations.MakeWord(key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]);
             }
 
             if (_nk <= 6)
@@ -277,12 +264,12 @@ namespace Rijndael
                 int b2WordIndex = (i + cFunc(2)) % _nb;
                 int b3WordIndex = (i + cFunc(3)) % _nb;
 
-                byte b0 = GetByte(stateCopy[b0WordIndex], 0);
-                byte b1 = GetByte(stateCopy[b1WordIndex], 1);
-                byte b2 = GetByte(stateCopy[b2WordIndex], 2);
-                byte b3 = GetByte(stateCopy[b3WordIndex], 3);
+                byte b0 = WordOperations.GetByte(stateCopy[b0WordIndex], 0);
+                byte b1 = WordOperations.GetByte(stateCopy[b1WordIndex], 1);
+                byte b2 = WordOperations.GetByte(stateCopy[b2WordIndex], 2);
+                byte b3 = WordOperations.GetByte(stateCopy[b3WordIndex], 3);
 
-                state[i] = MakeWord(b0, b1, b2, b3);
+                state[i] = WordOperations.MakeWord(b0, b1, b2, b3);
             }
         }
 
@@ -335,10 +322,10 @@ namespace Rijndael
             for (int i = 0; i < _nb; ++i)
             {
                 uint word = state[i];
-                byte b0 = GetByte(word, 0);
-                byte b1 = GetByte(word, 1);
-                byte b2 = GetByte(word, 2);
-                byte b3 = GetByte(word, 3);
+                byte b0 = WordOperations.GetByte(word, 0);
+                byte b1 = WordOperations.GetByte(word, 1);
+                byte b2 = WordOperations.GetByte(word, 2);
+                byte b3 = WordOperations.GetByte(word, 3);
 
                 //Console.WriteLine($"b0 = {ByteToStringHex(b0)}");
                 //Console.WriteLine($"b1 = {ByteToStringHex(b1)}");
@@ -365,7 +352,7 @@ namespace Rijndael
                 //Console.WriteLine($"new b2 = {ByteToStringHex(newB2)}");
                 //Console.WriteLine($"new b3 = {ByteToStringHex(newB3)}");
 
-                state[i] = MakeWord(newB0, newB1, newB2, newB3);
+                state[i] = WordOperations.MakeWord(newB0, newB1, newB2, newB3);
             }
         }
 
@@ -532,7 +519,8 @@ namespace Rijndael
         {
             for (int i = 0; i < block.Length; ++i)
             {
-                Console.WriteLine($"{ByteToStringHex(GetByte(block[i], 0))} {ByteToStringHex(GetByte(block[i], 1))} {ByteToStringHex(GetByte(block[i], 2))} {ByteToStringHex(GetByte(block[i], 3))}");
+                Console.WriteLine($"{ByteToStringHex(WordOperations.GetByte(block[i], 0))} {ByteToStringHex(WordOperations.GetByte(block[i], 1))}" +
+                    $" {ByteToStringHex(WordOperations.GetByte(block[i], 2))} {ByteToStringHex(WordOperations.GetByte(block[i], 3))}");
             }
         }
 
@@ -541,10 +529,10 @@ namespace Rijndael
             action.Invoke(block);
             for (int i = 0; i < block.Length; ++i)
             {
-                result[j++] = GetByte(block[i], 0);
-                result[j++] = GetByte(block[i], 1);
-                result[j++] = GetByte(block[i], 2);
-                result[j++] = GetByte(block[i], 3);
+                result[j++] = WordOperations.GetByte(block[i], 0);
+                result[j++] = WordOperations.GetByte(block[i], 1);
+                result[j++] = WordOperations.GetByte(block[i], 2);
+                result[j++] = WordOperations.GetByte(block[i], 3);
 
                 block[i] = 0;
             }
@@ -571,7 +559,7 @@ namespace Rijndael
                 int byteInWordIndex = k % sizeof(uint);
                 k++;
 
-                block[wordIndex] = SetByte(block[wordIndex], bytes[i], byteInWordIndex);
+                block[wordIndex] = WordOperations.SetByte(block[wordIndex], bytes[i], byteInWordIndex);
 
                 if (k == blockSizeInBytes)
                 {

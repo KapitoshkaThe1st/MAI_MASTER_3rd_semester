@@ -7,7 +7,7 @@ using Rijndael.Options;
 
 namespace Rijndael
 {
-    enum CipherMode
+    enum BlockChainingMode
     {
         ECB,
         CBC,
@@ -34,15 +34,45 @@ namespace Rijndael
             return key;
         }
 
-        private static CipherMode ParseCipherMode(string cipherMode)
+        private static BlockChainingMode ParseBlockChainingMode(string blockChainingModeString)
         {
-            return Enum.Parse<CipherMode>(cipherMode);
+            try
+            {
+                return Enum.Parse<BlockChainingMode>(blockChainingModeString);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"unknown block chaining mode: {blockChainingModeString}");
+            }
         }
 
-        //private static CipherBlockChainer CipherBlockChainerFactory(CipherMode cipherMode)
-        //{
-        //    return 
-        //}
+        private static uint[] ParseIV(string ivString)
+        {
+            try
+            {
+                var bytes = Convert.FromHexString(ivString);
+
+                if(bytes.Length % sizeof(uint) != 0)
+                {
+                    throw new ArgumentException($"invalid initial vector: initial vector length must be multiple of {sizeof(uint)}");
+                }
+
+                int size = bytes.Length / sizeof(uint);
+
+                uint[] result = new uint[size];
+
+                for(int i = 0; i < bytes.Length; i += 4)
+                {
+                    result[i / 4] = WordOperations.MakeWord(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"invalid initial vector: {ex.Message}");
+            }
+        }
 
         private static void ThrowIfInvalidKey(byte[] key)
         {
@@ -63,21 +93,43 @@ namespace Rijndael
                 _ => throw new ArgumentException($"invalid block length: {blockLengthString}")
             };
         }
-
-        private static void ThrowIfInvalidKey(ulong key)
-        {
-            if (key > 0xFFFFFFFFFFFFFF) // больше 56 бит ключ
-            {
-                throw new ArgumentException("invalid key: key must be 56-bit length");
-            }
-        }
-
-        private static void StringEncoding(StringEncodingOptions options)
+        private static Rijndael EncryptorFactory(BaseOptions options)
         {
             byte[] key = ParseKey(options.Key);
             Rijndael.BlockLength blockLength = ParseBlockLength(options.BlockLength);
 
-            var rijndael = new Rijndael(key, blockLength);
+            BlockChainingMode blockChainingMode = ParseBlockChainingMode(options.Mode);
+
+            uint[] iv = null;
+            if (blockChainingMode != BlockChainingMode.ECB)
+            {
+                if(options.IV == BaseOptions.DefaultIVString)
+                {
+                    throw new ArgumentException($"block chaining mode error: block chaining mode {blockChainingMode} requires initial vector");
+                }
+
+                int blockLengthInBits = (int)blockLength;
+                if (options.IV.Length / 2 * 8 != (int)blockLength)
+                {
+                    throw new ArgumentException($"invalid initial vector: initial vector must be {blockLengthInBits}");
+                }
+
+                iv = ParseIV(options.IV);
+            }
+
+            return blockChainingMode switch
+            {
+                BlockChainingMode.ECB => new Rijndael(key, blockLength),
+                BlockChainingMode.CBC => new CBCRijndael(iv, key, blockLength),
+                BlockChainingMode.CFB => new CFBRijndael(iv, key, blockLength),
+                BlockChainingMode.OFB => new OFBRijndael(iv, key, blockLength),
+                _ => throw new ArgumentException($"Unknown block chaining mode '{blockChainingMode}'")
+            };
+        }
+
+        private static void StringEncoding(StringEncodingOptions options)
+        {
+            var rijndael = EncryptorFactory(options);
             var bytes = rijndael.EncodeString(options.String);
 
             foreach (var b in bytes)
@@ -104,10 +156,7 @@ namespace Rijndael
                 throw new ArgumentException($"invalid cipher format: {ex.Message}");
             }
 
-            byte[] key = ParseKey(options.Key);
-            Rijndael.BlockLength blockLength = ParseBlockLength(options.BlockLength);
-
-            var rijndael = new Rijndael(key, blockLength);
+            var rijndael = EncryptorFactory(options);
             string decodedString = rijndael.DecodeString(bytes);
 
             Console.WriteLine(decodedString);
@@ -115,10 +164,7 @@ namespace Rijndael
 
         private static void FileEncoding(FileEncodingOptions options)
         {
-            byte[] key = ParseKey(options.Key);
-            Rijndael.BlockLength blockLength = ParseBlockLength(options.BlockLength);
-
-            var rijndael = new Rijndael(key, blockLength);
+            var rijndael = EncryptorFactory(options);
 
             try
             {
@@ -132,10 +178,7 @@ namespace Rijndael
 
         private static void FileDecoding(FileDecodingOptions options)
         {
-            byte[] key = ParseKey(options.Key);
-            Rijndael.BlockLength blockLength = ParseBlockLength(options.BlockLength);
-
-            var rijndael = new Rijndael(key, blockLength);
+            var rijndael = EncryptorFactory(options);
 
             try
             {
