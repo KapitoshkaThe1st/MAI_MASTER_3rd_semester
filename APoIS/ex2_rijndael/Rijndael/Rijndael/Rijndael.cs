@@ -7,7 +7,7 @@ using GF_Operations;
 
 namespace Rijndael
 {
-    public sealed class Rijndael
+    public class Rijndael
     {
         public enum BlockLength
         {
@@ -466,7 +466,7 @@ namespace Rijndael
             InverseMixColumn(block);
         }
 
-        public void EncodeBlock(uint[] block)
+        public virtual void EncodeBlock(uint[] block)
         {
             //Console.WriteLine("ENCODING");
 
@@ -497,7 +497,7 @@ namespace Rijndael
             //PrintBlock(block);
         }
 
-        public void DecodeBlock(uint[] block)
+        public virtual void DecodeBlock(uint[] block)
         {
             //Console.WriteLine("DECODING");
 
@@ -528,7 +528,7 @@ namespace Rijndael
             //PrintBlock(block);
         }
 
-        private void PrintBlock(uint[] block)
+        protected void PrintBlock(uint[] block)
         {
             for (int i = 0; i < block.Length; ++i)
             {
@@ -614,12 +614,12 @@ namespace Rijndael
             return EncodeDecodeBytesHelper(bytes, bytesCount, DecodeBlock);
         }
 
-        public byte[] EncodeString(string text)
+        public virtual byte[] EncodeString(string text)
         {
             return EncodeBytes(System.Text.Encoding.UTF8.GetBytes(text));
         }
 
-        public string DecodeString(byte[] data)
+        public virtual string DecodeString(byte[] data)
         {
             byte[] bytes = DecodeBytes(data);
             return System.Text.Encoding.UTF8.GetString(bytes.ToArray()).Trim('\0');
@@ -628,7 +628,7 @@ namespace Rijndael
         private const int _chunkSize = 10240 * 96; // k * НОК(16, 24, 32) т.к. размер чанка должен быть кратен длине блока
         ThreadLocal<byte[]> _buffer = new ThreadLocal<byte[]>(() => new byte[_chunkSize]);
 
-        public void EncodeFile(string inputFilePath, string outputFilePath)
+        public virtual void EncodeFile(string inputFilePath, string outputFilePath)
         {
             if (!File.Exists(inputFilePath))
             {
@@ -668,7 +668,7 @@ namespace Rijndael
             }
         }
 
-        public void DecodeFile(string inputFilePath, string outputFilePath)
+        public virtual void DecodeFile(string inputFilePath, string outputFilePath)
         {
             if (!File.Exists(inputFilePath))
             {

@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.IO;
 
-using RijndaelAlgo = Rijndael.Rijndael;
+using Rijndael;
 
 namespace Tests
 {
@@ -42,14 +42,14 @@ namespace Tests
             }
         };
 
-        static RijndaelAlgo.BlockLength[] blockLengthes = new RijndaelAlgo.BlockLength[]
+        static Rijndael.Rijndael.BlockLength[] blockLengthes = new Rijndael.Rijndael.BlockLength[]
         {
-            RijndaelAlgo.BlockLength.Bit128,
-            RijndaelAlgo.BlockLength.Bit192,
-            RijndaelAlgo.BlockLength.Bit256
+            Rijndael.Rijndael.BlockLength.Bit128,
+            Rijndael.Rijndael.BlockLength.Bit192,
+            Rijndael.Rijndael.BlockLength.Bit256
         };
 
-        static (uint[] block, RijndaelAlgo.BlockLength blockLength)[] blocks = new (uint[] block, RijndaelAlgo.BlockLength blockLength)[]
+        static (uint[] block, Rijndael.Rijndael.BlockLength blockLength)[] blocks = new (uint[] block, Rijndael.Rijndael.BlockLength blockLength)[]
         {
             (new uint[]
             {
@@ -57,7 +57,7 @@ namespace Tests
                 0x07060504,
                 0x0b0a0908,
                 0x0f0e0d0c,
-            }, RijndaelAlgo.BlockLength.Bit128),
+            }, Rijndael.Rijndael.BlockLength.Bit128),
             (new uint[]
             {
                 0x03020100,
@@ -66,7 +66,7 @@ namespace Tests
                 0x0f0e0d0c,
                 0x13121110,
                 0x17161514,
-            }, RijndaelAlgo.BlockLength.Bit192),
+            }, Rijndael.Rijndael.BlockLength.Bit192),
             (new uint[]
             {
                 0x03020100,
@@ -77,7 +77,38 @@ namespace Tests
                 0x17161514,
                 0x1b1a1918,
                 0x1f1e1d1c
-            }, RijndaelAlgo.BlockLength.Bit256)
+            }, Rijndael.Rijndael.BlockLength.Bit256)
+        };
+
+        private static uint[][] _ivs = new uint[][]
+        {
+            new uint[]
+            {
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU,
+            },
+            new uint[]
+            {
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU
+            },
+            new uint[]
+            {
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU,
+                0x01234567U,
+                0x89abcdefU
+            },
         };
 
         static void GenerateFile(string filePath, int size)
@@ -93,6 +124,17 @@ namespace Tests
             return Enumerable.SequenceEqual(File.ReadAllBytes(filePath1), File.ReadAllBytes(filePath2));
         }
 
+        static int IVIndexByBlockLength(Rijndael.Rijndael.BlockLength blockLength)
+        {
+            return blockLength switch
+            {
+                Rijndael.Rijndael.BlockLength.Bit128 => 0,
+                Rijndael.Rijndael.BlockLength.Bit192 => 1,
+                Rijndael.Rijndael.BlockLength.Bit256 => 2,
+                _ => -1
+            };
+        }
+
         static bool TestFileEncodingDecoding(string filePath)
         {
             string encodedFilePath = filePath + ".rij";
@@ -103,15 +145,27 @@ namespace Tests
                 foreach (var blockLength in blockLengthes)
                 {
                     Console.WriteLine($"key length: {key.Length * 8}, block length: {blockLength}");
-                    RijndaelAlgo rj = new RijndaelAlgo(key, blockLength);
 
-                    rj.EncodeFile(filePath, encodedFilePath);
-                    rj.DecodeFile(encodedFilePath, decodedFilePath);
+                    var iv = _ivs[IVIndexByBlockLength(blockLength)];
 
-                    if (!CompareFiles(filePath, decodedFilePath))
+                    Rijndael.Rijndael[] rjs = new Rijndael.Rijndael[]
                     {
-                        Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
-                        return false;
+                        new Rijndael.Rijndael(key, blockLength),
+                        new CBCRijndael(iv, key, blockLength),
+                        new CFBRijndael(iv, key, blockLength),
+                        new OFBRijndael(iv, key, blockLength),
+                    };
+
+                    foreach (var rj in rjs)
+                    {
+                        rj.EncodeFile(filePath, encodedFilePath);
+                        rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+                        if (!CompareFiles(filePath, decodedFilePath))
+                        {
+                            Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
+                            return false;
+                        }
                     }
                 }
             }
@@ -131,15 +185,27 @@ namespace Tests
                 foreach (var blockLength in blockLengthes)
                 {
                     Console.WriteLine($"file size: {fileSize}, key length: {key.Length * 8}, block length: {blockLength}");
-                    RijndaelAlgo rj = new RijndaelAlgo(key, blockLength);
 
-                    rj.EncodeFile(filePath, encodedFilePath);
-                    rj.DecodeFile(encodedFilePath, decodedFilePath);
+                    var iv = _ivs[IVIndexByBlockLength(blockLength)];
 
-                    if (!CompareFiles(filePath, decodedFilePath))
+                    Rijndael.Rijndael[] rjs = new Rijndael.Rijndael[]
                     {
-                        Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
-                        return false;
+                        new Rijndael.Rijndael(key, blockLength),
+                        new CBCRijndael(iv, key, blockLength),
+                        new CFBRijndael(iv, key, blockLength),
+                        new OFBRijndael(iv, key, blockLength),
+                    };
+
+                    foreach (var rj in rjs)
+                    {
+                        rj.EncodeFile(filePath, encodedFilePath);
+                        rj.DecodeFile(encodedFilePath, decodedFilePath);
+
+                        if (!CompareFiles(filePath, decodedFilePath))
+                        {
+                            Console.WriteLine($"files are not equal: filePath: {filePath}, decodedFilePath: {decodedFilePath}");
+                            return false;
+                        }
                     }
                 }
             }
@@ -177,7 +243,7 @@ namespace Tests
             {
                 foreach (var (block, blockLength) in blocks)
                 {
-                    RijndaelAlgo rj = new RijndaelAlgo(key, blockLength);
+                    Rijndael.Rijndael rj = new Rijndael.Rijndael(key, blockLength);
 
                     var blockCopy = (uint[])block.Clone();
 

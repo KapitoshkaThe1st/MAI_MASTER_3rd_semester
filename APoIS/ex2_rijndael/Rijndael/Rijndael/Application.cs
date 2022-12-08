@@ -7,6 +7,14 @@ using Rijndael.Options;
 
 namespace Rijndael
 {
+    enum CipherMode
+    {
+        ECB,
+        CBC,
+        CFB,
+        OFB
+    }
+
     class Application
     {
         private static byte[] ParseKey(string keyHex)
@@ -25,6 +33,16 @@ namespace Rijndael
 
             return key;
         }
+
+        private static CipherMode ParseCipherMode(string cipherMode)
+        {
+            return Enum.Parse<CipherMode>(cipherMode);
+        }
+
+        //private static CipherBlockChainer CipherBlockChainerFactory(CipherMode cipherMode)
+        //{
+        //    return 
+        //}
 
         private static void ThrowIfInvalidKey(byte[] key)
         {
