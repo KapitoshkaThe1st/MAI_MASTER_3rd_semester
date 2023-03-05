@@ -1,7 +1,8 @@
 {
   "profiles": {
     "GF_Operations": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "gf-multiply --element1 x^6+x^4+x^2 --element2 x^7+x^4+x^3+x^2+x+1 -m 0x11b"
     }
   }
 }

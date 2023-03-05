@@ -55,7 +55,9 @@ namespace RSA
             return new BigInteger(bytes);
         }
 
-        private static readonly BigInteger defaultPublicExponent = new BigInteger(65537);
+        //private static readonly BigInteger defaultPublicExponent = new BigInteger(65537);
+        //private static readonly BigInteger defaultPublicExponent = new BigInteger(5);
+        private static readonly BigInteger defaultPublicExponent = new BigInteger(3);
 
         private BigInteger GeneratePrimeNumber(bool larger)
         {
