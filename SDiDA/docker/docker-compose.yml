@@ -1,0 +1,58 @@
+networks:
+  mongo_cluster:
+    name: mongo_cluster_network
+
+volumes:
+  mongo0data:
+    name: mongo0data
+  mongo1data:
+    name: mongo1data
+  mongo2data:
+    name: mongo2data
+
+services:
+  mongo0:
+    image: mongo:6.0.4
+    container_name: mongo0
+    command: mongod --replSet rs
+    networks:
+      - mongo_cluster
+    volumes:
+      - mongo0data:/data/db
+
+  mongo1:
+    image: mongo:6.0.4
+    container_name: mongo1
+    command: mongod --replSet rs
+    networks:
+      - mongo_cluster
+    volumes:
+      - mongo1data:/data/db
+
+  mongo2:
+    image: mongo:6.0.4
+    container_name: mongo2
+    command: mongod --replSet rs
+    networks:
+      - mongo_cluster
+    volumes:
+      - mongo2data:/data/db
+
+  init:
+    container_name: mongo_rs_initiation
+    image: mongo:6.0.4
+    command:
+      - sh
+      - -c 
+      - |
+        echo "waiting 10s for all mongo nodes initialization"
+        sleep 10s
+        mongosh --file rs_initiate.js mongodb://mongo0
+    depends_on:
+      - mongo0
+      - mongo1
+      - mongo2
+    volumes:
+      - ./rs_initiate.js:/rs_initiate.js
+    networks:
+      - mongo_cluster
