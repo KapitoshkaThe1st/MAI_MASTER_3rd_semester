@@ -1,3 +1,5 @@
+version: '3.0'
+
 networks:
   mongo_cluster:
     name: mongo_cluster_network
