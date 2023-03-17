@@ -2,5 +2,5 @@
 
 namespace ApplicationAPI.DTOs
 {
-    public record CommentDto(ObjectId PostId, ObjectId AuthorId, string Text);
+    public record CommentDto(ObjectId CommentId, ObjectId PostId, ObjectId AuthorId, string Text);
 }

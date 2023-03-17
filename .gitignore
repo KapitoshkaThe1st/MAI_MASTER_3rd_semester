@@ -30,3 +30,8 @@
 /SDiDA/ApplicationAPI/obj
 /SDiDA/ApplicationAPI/bin
 SDiDA/ApplicationAPI/.vscode
+/SDiDA/Populate/data/Users.xml
+/SDiDA/Populate/data/Comments.xml
+/SDiDA/Populate/data/Posts.xml
+/SDiDA/Populate/obj
+/SDiDA/Populate/bin

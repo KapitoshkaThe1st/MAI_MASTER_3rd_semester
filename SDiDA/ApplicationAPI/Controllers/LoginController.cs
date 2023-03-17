@@ -39,7 +39,7 @@ namespace WebApplication.Controllers
             if(user != null)
             {
                 var token = GenerateJWT(user);
-                return Ok(new { jwtToken = token });
+                return Ok(new { JwtToken = token });
             }
             return NotFound("User not found");
         }

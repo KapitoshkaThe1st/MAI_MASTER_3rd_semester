@@ -2,5 +2,5 @@
 
 namespace ApplicationAPI.DTOs
 {
-    public record PostDto(ObjectId AuthorId, string Text);
+    public record PostDto(ObjectId PostId, ObjectId AuthorId, string Text);
 }

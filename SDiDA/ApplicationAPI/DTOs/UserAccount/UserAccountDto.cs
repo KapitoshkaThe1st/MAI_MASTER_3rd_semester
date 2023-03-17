@@ -9,7 +9,6 @@ namespace ApplicationAPI.DTOs
     public class UserAccountDto
     {
         public string Login { get; set; }
-        public string PasswordHash { get; set; }
         public ObjectId ProfileId { get; set; }
     }
 }
