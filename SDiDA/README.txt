@@ -1,5 +1,3 @@
-Запускать так:
+Запускать так (НЕ РАБОТАЕТ):
 
-1. docker-compose .\mongo\docker-compose.yml up -d
-
-2. в терминале WSL 
+docker-compose
