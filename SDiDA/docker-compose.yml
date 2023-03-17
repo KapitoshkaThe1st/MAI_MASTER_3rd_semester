@@ -13,6 +13,15 @@ volumes:
     name: mongo2data
 
 services:
+  app-server:
+    container_name: app-server
+    build:
+      context: .
+      dockerfile: ./docker/app-server.Dockerfile
+    ports:
+      - 8080:80
+      - 8081:8081
+
   mongo0:
     image: mongo:6.0.4
     container_name: mongo0
@@ -55,6 +64,6 @@ services:
       - mongo1
       - mongo2
     volumes:
-      - ./rs_initiate.js:/rs_initiate.js
+      - ./docker/rs_initiate.js:/rs_initiate.js
     networks:
       - mongo_cluster
